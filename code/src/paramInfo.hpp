@@ -64,18 +64,20 @@ informationParam<T> getInformationParam (T t);
 template <class T, class U = decltype(&T::operator())>
 informationParam<decltype(&T::operator())> getInformationParam (T t);
 
-/*
+
 template    <
                 class T,
                 class U = typename std::enable_if   <
-                                                       std::is_same<typename can_be_checked<T>::type,
-                                                                    std::false_type>::value
+                                                       std::is_same<
+                                                                        typename  can_be_checked <T>::type,
+                                                                        std::false_type
+                                                                    >::value
                                                     >::type
             >
 void getInformationParam (T t){
     struct LeParamEstSansDouteUneLambda {};
     ERREUR<LeParamEstSansDouteUneLambda> erreur;
-}*/
+}
 /**
     Les methodes pour l'utilisation simple de ce qu'il y a avant toujours avec 2 ecritures possible
 

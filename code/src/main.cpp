@@ -2,6 +2,7 @@
 #include <vector>
 #include <typeinfo>
 #include <algorithm>
+#include <functional>
 
 #include "iterateurFoncteur.hpp"
 #include "paramInfo.hpp"
@@ -49,17 +50,50 @@ InputIterator find_if_maison (InputIterator first, InputIterator last, UnaryPred
                   "La méthode doit retourner un bool");
     return std::find_if(first,last,pred);
 }
+/*
+template<class InputIterator, class UnaryPredicate, class T = typename std::enable_if   <
+                                                                                           std::is_same<typename can_be_checked<UnaryPredicate>::type,
+                                                                                                        std::false_type>::value
+                                                                                        >::type  >
+InputIterator find_if_maison (InputIterator first, InputIterator last, UnaryPredicate pred)
+{
+    return std::find_if(first,last,pred);
+}*/
 
 template <class T>
 bool foo (T a) { (void)a; return true;}
 
+int test2 () { return 1 ;}
 bool ok (){ return true;}
+
+struct mem_test {
+    bool test(int a) { (void) a; return true ; }
+
+};
 int main()
 {
     using namespace std;
+    cout << nbParam(test2) << endl;
 
+    cout << typeid(can_be_checked<int>::type).name() << endl;
+    cout << typeid(can_be_checked<decltype(test2)>::type).name() << endl;
+    auto a = [](auto d) { return true ; };
+
+    auto b = [](int s){(void)s; return true;};
+    cout << typeid(can_be_checked<decltype(a)>::type).name() << endl;
+    cout << typeid(can_be_checked<decltype(b)>::type).name() << endl;
+    std::vector<int> vec =  { 1 ,2 ,3 , 4 };
+    auto test7 = find_if_maison(vec.begin(), vec.end() ,[](auto s){(void)s; return true;} );
+    /*cout << nbParam(mem_fun(&mem_test::test) ) << endl;
+    cout << nbParam(&mem_test::test) << endl;
+    std::vector<int> vec =  { 1 ,2 ,3 , 4 };
+    auto test = find_if_maison(vec.begin(), vec.end() ,&mem_test::test );
+    //cout << "fail "<< nbParam() << endl;*/
+
+
+/*
     std::vector<int> test =  { 1 ,2 ,3 , 4 };
-   auto it = find_if_maison(test.begin(), test.end() ,[](int s){(void)s; return true;} );
+  //  auto it = find_if_maison(test.begin(), test.end() ,[](int s){(void)s; return true;} );
    //auto test3 = std::find_if(test.begin(), test.end(), 5);
    //auto test4 = find_if_maison(test.begin(), test.end() ,5 );
 
@@ -72,6 +106,9 @@ int main()
 
 
 
+    cout << typeid(decltype(typeParam<0>(mem_fun(&string::length)))).name() << endl;
+    cout << typeid(decltype(typeRetour(mem_fun(&string::length)))).name() << endl;
+    cout << "ici" << nbParam(mem_fun(&string::length)) << endl;
     Bidon b;
     for (auto& elem : b) {
         std::cout << elem << std::endl;
