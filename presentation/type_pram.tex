@@ -1,0 +1,200 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}  
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc} 
+\usepackage{listings}
+
+
+\usepackage{multimedia}
+\usepackage{graphicx}
+\usepackage[normalem]{ulem} %tentative de barer un text
+\usepackage{tabularx}
+
+\graphicspath{images/}
+\usetheme{Luebeck}
+\usecolortheme{crane}
+
+
+\input{mise_en_page_globale.tex}
+
+
+\title{Déduction des types des paramètres}
+\author{\url{Martin Morterol}}
+\date{\today}
+
+
+\begin{document}
+
+%le titre
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+\section{Pourquoi ?}
+
+\begin{frame}
+	Contexte : Un petit jeu en 2D.
+    \begin{itemize}
+    	\item Une carte est un conteneur au sens de la STL.
+    	\item On peut donc l'utiliser dans un for range.
+    \end{itemize}
+    Problème : 
+    \begin{itemize}
+    	\item Une carte contient des std::reference\_wrappeur<Case>.
+    	\item J'ai pas envie que l'utilisateur connaisse ma structure interne ni qu'il en dépende.
+    	\item J'ai pas envie d’écrire .get() à chaque fois. 
+    	\item J'ai envie de me faire plaisir ça sert à ça les projets perso :)
+    \end{itemize}
+    Solution : Je crée mon iterateur maison que j'appelle FoncteurIterator.
+    
+\end{frame}
+
+\begin{frame}
+	\href{run:FoncteurIterator.cpp}{FoncteurIterator.cpp}\\
+	Problème : 
+	\begin{itemize}
+		\item Pour utiliser un std::function<> J'ai besoin du type de retour du foncteur et du type du paramètre. 
+		\item J'ai également besoin du type du paramètre pour d'autre chose (l'operator::* par exemple)
+	\end{itemize}
+	Solution :
+	\begin{itemize}
+		\item FoncteurIterator< IteratorTemplates, FoncteurTemplate, typeRetour, typeParam>, Ok mais j'aime pas 
+		\item Trouver un moyen de déduire typeRetour et typeParam directement de FoncteurTemplate. 
+	\end{itemize}
+\end{frame}
+
+\section{Comment ?}
+
+
+\begin{frame}[containsverbatim]
+On utilise le fait que les fonctions templates les plus spécialisées ont la priorité.
+\begin{verbatim}
+template <class T> struct informationParam 
+
+template <typename ClassType, typename ReturnType,
+          typename... Args>
+struct informationParam<ReturnType(ClassType::*)(Args...) >
+
+template <typename ClassType, typename ReturnType,
+          typename... Args>
+struct informationParam<ReturnType(ClassType::*)(Args...)
+                        const>
+
+template < typename ReturnType, typename... Args>
+struct informationParam<ReturnType(*)(Args...)>
+\end{verbatim}
+
+\end{frame} 
+
+
+\begin{frame}[containsverbatim]
+Le gros de la magie est fait, il reste à faire le traitement.
+\begin{verbatim}
+template<class ReturnType, class ... Args>
+struct informationParamParamFactorisation{
+    constexpr static size_t arity = sizeof...(Args);
+    using  result_type = ReturnType;
+    template <size_t indice>
+    struct arg_type_{
+        static_assert ((indice < arity ), "msg d'erreur" );
+        using type= typename std::tuple_element<indice,
+                    std::tuple<Args...>>::type;
+
+    };
+    template <size_t i> using arg_type = 
+                               typename arg_type_<i>::type;
+};
+\end{verbatim}
+\end{frame} 
+
+\begin{frame}[containsverbatim]
+Maintenant on prend soin de nos utilisateurs en mettant des erreurs claires. 
+\begin{verbatim}
+template <class... T>
+class ERREUR;
+
+// Le cas general si on arrive la c'est qu'on a perdu,
+//  on compile pas et on informe l'utilisateur
+//  que "ERREUR<LeParamNestPasUneFonction>"
+
+template <class T>
+struct informationParam{
+    struct LeParamNestPasUneFonction {};
+    ERREUR<LeParamNestPasUneFonction> erreur;
+};
+\end{verbatim}
+\end{frame}
+
+
+\begin{frame}
+Si on résume, ça nous donne : 
+	\href{run:paramInfo.hpp}{paramInfo.hpp}\\
+
+
+\end{frame}
+
+
+\section{L'utilisation}
+\begin{frame}[containsverbatim]
+La fonction qui donne le nombre d'argument, j'ai pas réussi à faire un beau message d'erreur, du coup j'ai mis un commentaire la ou le compilateur va envoyer l'utilisateur. Mieux que rien...
+\begin{verbatim}
+template<class T>
+constexpr size_t nbParam(T fonction){
+    // si ça plante ici c'est que ta classe elle a pas
+                                  d'operateur () , noob
+    return decltype(getInformationParam(fonction))
+                                         ::type::arity;
+}
+template<class T> constexpr size_t nbParam(){
+    return decltype(getInformationParam(std::declval<T>()))
+    			::type::arity; // idem (pas de place dans le slide)
+}
+\end{verbatim}
+
+\end{frame} 
+
+\begin{frame}[containsverbatim]
+La fonction principale, avec deux écritures en fonction de ce qui est le plus simple pour l'utilisateur. 
+\begin{verbatim}
+template<size_t nb,class T>
+constexpr typename decltype(getInformationParam(
+    std::declval<T>()))::type::template arg_type<nb>
+    typeParam(T fonction );
+
+template<size_t nb,class T>
+constexpr typename decltype(getInformationParam(
+     std::declval<T>()))::type::template arg_type<nb>
+     typeParam();
+\end{verbatim}
+
+\end{frame} 
+
+
+\begin{frame}[containsverbatim]
+Et puisque que ça me coûte rien je fais le même avec le type de retour.  
+\begin{verbatim}
+template<class T>
+constexpr typename decltype(getInformationParam(
+    std::declval<T>()))::type::result_type 
+    typeRetour(T fonction );
+
+template<class T>
+constexpr typename decltype(getInformationParam(
+    std::declval<T>()))::type::result_type 
+    typeRetour( );
+\end{verbatim}
+
+\end{frame} 
+
+
+
+\begin{frame}
+    \begin{center}
+        \Huge Questions ? 
+    \end{center}
+\end{frame}
+
+
+
+\end{document}

@@ -1,0 +1,47 @@
+% un test pour pouvoir barer qqch dans le titre de beamer
+\newlength{\textlarg}
+\newcommand{\barre}[1]{%
+   \settowidth{\textlarg}{#1}
+   #1\hspace{-\textlarg}\rule[0.5ex]{\textlarg}{0.5pt}}
+
+% la gestion des sommaires
+\AtBeginSection[]
+{
+ \begin{frame}
+  \frametitle{Sommaire}
+  \tableofcontents[currentsection, hideothersubsections]
+  \end{frame} 
+}
+
+
+\AtBeginSubsection[]
+{
+ \begin{frame}
+  \frametitle{Sommaire}
+  \tableofcontents[  
+    sectionstyle=show/shaded,
+    subsectionstyle=show/shaded/hide
+    ]
+  \end{frame} 
+}
+
+% l'inbrication de itemize
+\setbeamertemplate{itemize subitem}{\tiny\raise1.5pt\hbox{\donotcoloroutermaths$\blacktriangleright$}}
+
+% le pied de page en 3 parties avec des n° de ligne
+\setbeamertemplate{footline}{
+\leavevmode%
+\hbox{\hspace*{-0.06cm}
+\begin{beamercolorbox}[wd=.2\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+	\usebeamerfont{author in head/foot}\insertshortauthor%~~(\insertshortinstitute)
+\end{beamercolorbox}%
+\begin{beamercolorbox}[wd=.6\paperwidth,ht=2.25ex,dp=1ex,center]{section in head/foot}%
+	\usebeamerfont{section in head/foot}\insertshorttitle
+\end{beamercolorbox}%
+\begin{beamercolorbox}[wd=.2\paperwidth,ht=2.25ex,dp=1ex,right]{section in head/foot}%
+	\usebeamerfont{section in head/foot}
+	\insertframenumber{} / \inserttotalframenumber\hspace*{2ex}
+\end{beamercolorbox}}%
+\vskip0pt%
+}
+
