@@ -3,8 +3,11 @@
 #define param_info_hpp
 
 #include <iostream>
-#include <tuple>
-
+#include <vector>
+#include <typeinfo>
+#include <algorithm>
+#include <functional>
+#include "can_be_check.hpp"
 
 template <class... T>
 class ERREUR;
@@ -64,13 +67,20 @@ informationParam<T> getInformationParam (T t);
 template <class T, class U = decltype(&T::operator())>
 informationParam<decltype(&T::operator())> getInformationParam (T t);
 
-
 template    <
                 class T,
                 class U = typename std::enable_if   <
-                                                       std::is_same<
-                                                                        typename  can_be_checked <T>::type,
-                                                                        std::false_type
+                                                       ! std::is_same<
+                                                                        decltype(getInformationParam(std::declval<T>())),
+                                                                        informationParam<decltype(&T::operator())>
+
+                                                                    >::value
+                                                    >::type,
+               class W = typename std::enable_if   <
+                                                       ! std::is_same<
+                                                                        decltype(getInformationParam(std::declval<T>())),
+                                                                        informationParam<T>
+
                                                                     >::value
                                                     >::type
             >
@@ -78,6 +88,10 @@ void getInformationParam (T t){
     struct LeParamEstSansDouteUneLambda {};
     ERREUR<LeParamEstSansDouteUneLambda> erreur;
 }
+// Le plus spécialisé c'est que pour l'overload (donc des param de la fonction != )
+// et ici je fait  sfinae et tout candidat est bon
+// dans can be check : spécialisation ( on prend le plus spé aussi )
+// on ne peut pas faire de sfinae avec les classe en dehors de dans la spécialisation
 /**
     Les methodes pour l'utilisation simple de ce qu'il y a avant toujours avec 2 ecritures possible
 

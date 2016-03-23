@@ -50,7 +50,7 @@ InputIterator find_if_maison (InputIterator first, InputIterator last, UnaryPred
                   "La méthode doit retourner un bool");
     return std::find_if(first,last,pred);
 }
-/*
+
 template<class InputIterator, class UnaryPredicate, class T = typename std::enable_if   <
                                                                                            std::is_same<typename can_be_checked<UnaryPredicate>::type,
                                                                                                         std::false_type>::value
@@ -58,7 +58,7 @@ template<class InputIterator, class UnaryPredicate, class T = typename std::enab
 InputIterator find_if_maison (InputIterator first, InputIterator last, UnaryPredicate pred)
 {
     return std::find_if(first,last,pred);
-}*/
+}
 
 template <class T>
 bool foo (T a) { (void)a; return true;}
@@ -67,13 +67,13 @@ int test2 () { return 1 ;}
 bool ok (){ return true;}
 
 struct mem_test {
-    bool test(int a) { (void) a; return true ; }
-
+    //bool test(int a) { (void) a; return true ; }
+    bool operator()(){return false;}
 };
 int main()
 {
     using namespace std;
-    cout << nbParam(test2) << endl;
+    /*cout << nbParam(test2) << endl;
 
     cout << typeid(can_be_checked<int>::type).name() << endl;
     cout << typeid(can_be_checked<decltype(test2)>::type).name() << endl;
@@ -83,7 +83,17 @@ int main()
     cout << typeid(can_be_checked<decltype(a)>::type).name() << endl;
     cout << typeid(can_be_checked<decltype(b)>::type).name() << endl;
     std::vector<int> vec =  { 1 ,2 ,3 , 4 };
-    auto test7 = find_if_maison(vec.begin(), vec.end() ,[](auto s){(void)s; return true;} );
+
+*/
+
+
+
+   cout << enable_if_ope_parentese<int>::value2 << endl;
+    cout << enable_if_ope_parentese<mem_test>::value2 << endl;
+//    std::cout << typeid(decltype(&int::operator())).name() << std::endl;
+
+    //auto test7 = find_if_maison(vec.begin(), vec.end() ,[](auto s){(void)s; return true;} );
+    //auto test7 = find_if_maison(vec.begin(), vec.end() ,[](int s){(void)s; return true;} );
     /*cout << nbParam(mem_fun(&mem_test::test) ) << endl;
     cout << nbParam(&mem_test::test) << endl;
     std::vector<int> vec =  { 1 ,2 ,3 , 4 };
