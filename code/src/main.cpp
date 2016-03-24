@@ -4,10 +4,11 @@
 #include <algorithm>
 #include <functional>
 
-#include "iterateurFoncteur.hpp"
+//#include "iterateurFoncteur.hpp"
 #include "paramInfo.hpp"
 #include "can_be_check.hpp"
-
+#include "type_traits.hpp"
+/*
 struct Bidon {
     int a = 5 ;
     int b = 6 ;
@@ -31,30 +32,34 @@ struct Bidon {
     inline iterator end()                       { return iterator(vec.end());           }
     //inline const_iterator end() const           { return const_iterator(vec.end());     }
 };
+*/
 
 
 
 
-
-template<class InputIterator, class UnaryPredicate >
+template<class InputIterator, class UnaryPredicate,
+                class U = typename std::enable_if <  !std::is_class<UnaryPredicate>::value >::type,
+                class V = typename std::enable_if < has_operator_parenthese<UnaryPredicate>::value >::type,
+                class W = typename std::enable_if < has_operator_parenthese<UnaryPredicate>::value >::type
+            >
 InputIterator find_if_maison (InputIterator first, InputIterator last, UnaryPredicate pred)
 {
     static_assert(nbParam<UnaryPredicate>()==1,"La fonction ne doit avoir qu'un seul parametre !");
-    static_assert(
+   /* static_assert(
         std::is_convertible<typename InputIterator::value_type,
                             decltype(typeParam<0,UnaryPredicate>())>::value,
                   "Les types ne sont pas convertible entre eux :)"
                 );
 
     static_assert(std::is_same<bool,decltype(typeRetour<UnaryPredicate>())>::value,
-                  "La méthode doit retourner un bool");
+                  "La méthode doit retourner un bool");*/
     return std::find_if(first,last,pred);
 }
 
-template<class InputIterator, class UnaryPredicate, class T = typename std::enable_if   <
-                                                                                           std::is_same<typename can_be_checked<UnaryPredicate>::type,
-                                                                                                        std::false_type>::value
-                                                                                        >::type  >
+template<class InputIterator, class UnaryPredicate,
+                class U = typename std::enable_if <  std::is_class<UnaryPredicate>::value >::type,
+                class V = typename std::enable_if < !has_operator_parenthese<UnaryPredicate>::value >::type
+            >
 InputIterator find_if_maison (InputIterator first, InputIterator last, UnaryPredicate pred)
 {
     return std::find_if(first,last,pred);
@@ -67,12 +72,27 @@ int test2 () { return 1 ;}
 bool ok (){ return true;}
 
 struct mem_test {
-    //bool test(int a) { (void) a; return true ; }
+    bool test(int a, int d) { (void) a; return true ; }
     bool operator()(){return false;}
 };
 int main()
 {
     using namespace std;
+    cout << boolalpha ;
+    cout << has_operator_parenthese<int>::value << endl;
+    cout << has_operator_parenthese<mem_test>::value << endl;
+
+    std::vector<int> test =  { 1 ,2 ,3 , 4 };
+  //  auto it = find_if_maison(test.begin(), test.end() ,[](int s){(void)s; return true;} );
+   //auto test3 = std::find_if(test.begin(), test.end(), 5);
+   //auto test4 = find_if_maison(test.begin(), test.end() ,5 );
+
+  //  auto test5 = find_if_maison(test.begin(), test.end() ,[](int x) { return foo(x); });
+    //auto test6 = find_if(test.begin(), test.end() ,foo<int> );
+
+    //auto test6 = find_if(test.begin(), test.end() ,[](auto s){(void)s; return true;} );
+    auto test7 = find_if_maison(test.begin(), test.end() ,[](auto s){(void)s; return true;} );
+    exit(5);
     /*cout << nbParam(test2) << endl;
 
     cout << typeid(can_be_checked<int>::type).name() << endl;
@@ -81,23 +101,25 @@ int main()
 
     auto b = [](int s){(void)s; return true;};
     cout << typeid(can_be_checked<decltype(a)>::type).name() << endl;
-    cout << typeid(can_be_checked<decltype(b)>::type).name() << endl;
-    std::vector<int> vec =  { 1 ,2 ,3 , 4 };
+    cout << typeid(can_be_checked<decltype(b)>::type).name() << endl;*/
+    /*std::vector<int> vec =  { 1 ,2 ,3 , 4 };
 
-*/
 
 
 
    cout << enable_if_ope_parentese<int>::value2 << endl;
     cout << enable_if_ope_parentese<mem_test>::value2 << endl;
-//    std::cout << typeid(decltype(&int::operator())).name() << std::endl;
+    std::cout << typeid(decltype(&mem_test::operator())).name() << std::endl;
+    std::cout << typeid(decltype(&mem_test::operator())).name() << std::endl;
 
     //auto test7 = find_if_maison(vec.begin(), vec.end() ,[](auto s){(void)s; return true;} );
-    //auto test7 = find_if_maison(vec.begin(), vec.end() ,[](int s){(void)s; return true;} );
-    /*cout << nbParam(mem_fun(&mem_test::test) ) << endl;
+    auto test7 = find_if_maison(vec.begin(), vec.end() ,[](int s){(void)s; return true;} );*/
+//    cout << nbParam(mem_fun(&mem_test::test) ) << endl;
+
+    /*
     cout << nbParam(&mem_test::test) << endl;
     std::vector<int> vec =  { 1 ,2 ,3 , 4 };
-    auto test = find_if_maison(vec.begin(), vec.end() ,&mem_test::test );
+    auto test = find_if_maison(vec.begin(), vec.end() ,&mem_test::test );*/
     //cout << "fail "<< nbParam() << endl;*/
 
 
