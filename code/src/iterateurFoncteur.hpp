@@ -64,12 +64,12 @@ class FoncteurIterator
     static_assert(is_iterator<IteratorTemplate>::value,"Le type IteratorTemplate doit etre un itérateur");
 
      private :
-        //using typeDeRetour = decltype(typeRetour(std::declval<FoncteurTemplate>()));
-       // using typeDuParam  = decltype(typeParam<0>(std::declval<FoncteurTemplate>()));
+        using typeDeRetour = decltype(typeRetour(std::declval<FoncteurTemplate>()));
+        using typeDuParam  = decltype(typeParam<0>(std::declval<FoncteurTemplate>()));
 
         IteratorTemplate iterateur;
-        //std::function<typeDeRetour(typeDuParam)> foncteur;
-        FoncteurTemplate foncteur;
+        std::function<typeDeRetour(typeDuParam)> foncteur;
+
 
     public:
         // on veux itérer sur une conteneur sans avoir a re-coder son comportement, du coup on le garde en

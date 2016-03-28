@@ -37,31 +37,33 @@ struct Bidon {
 
 
 
-template<class InputIterator, class UnaryPredicate,
-                class U = typename std::enable_if <  !std::is_class<UnaryPredicate>::value >::type,
-                class V = typename std::enable_if < has_operator_parenthese<UnaryPredicate>::value >::type,
-                class W = typename std::enable_if < has_operator_parenthese<UnaryPredicate>::value >::type
-            >
-InputIterator find_if_maison (InputIterator first, InputIterator last, UnaryPredicate pred)
+template<class InputIterator, class UnaryPredicate>
+typename std::enable_if <
+                            is_introspectable<UnaryPredicate>::value ,
+                            InputIterator
+                        >::type
+find_if_maison (InputIterator first, InputIterator last, UnaryPredicate pred)
 {
     static_assert(nbParam<UnaryPredicate>()==1,"La fonction ne doit avoir qu'un seul parametre !");
-   /* static_assert(
+    static_assert(
         std::is_convertible<typename InputIterator::value_type,
                             decltype(typeParam<0,UnaryPredicate>())>::value,
                   "Les types ne sont pas convertible entre eux :)"
                 );
 
     static_assert(std::is_same<bool,decltype(typeRetour<UnaryPredicate>())>::value,
-                  "La méthode doit retourner un bool");*/
+                  "La méthode doit retourner un bool");
     return std::find_if(first,last,pred);
 }
 
-template<class InputIterator, class UnaryPredicate,
-                class U = typename std::enable_if <  std::is_class<UnaryPredicate>::value >::type,
-                class V = typename std::enable_if < !has_operator_parenthese<UnaryPredicate>::value >::type
-            >
-InputIterator find_if_maison (InputIterator first, InputIterator last, UnaryPredicate pred)
+template<class InputIterator, class UnaryPredicate>
+typename std::enable_if <
+                            !is_introspectable<UnaryPredicate>::value,
+                            InputIterator
+                        >::type
+find_if_maison (InputIterator first, InputIterator last, UnaryPredicate pred)
 {
+    std::cout << "Version sans verification" << std::endl;
     return std::find_if(first,last,pred);
 }
 
@@ -71,12 +73,23 @@ bool foo (T a) { (void)a; return true;}
 int test2 () { return 1 ;}
 bool ok (){ return true;}
 
+template <class T>
+bool isIntro (T a)
+{
+     using namespace std;
+    cout << boolalpha ;
+    cout << is_introspectable<T>::value << endl;
+}
+
 struct mem_test {
     bool test(int a, int d) { (void) a; return true ; }
     bool operator()(){return false;}
 };
 int main()
 {
+    isIntro([](int a ){});
+    isIntro([](auto a ){});
+
     using namespace std;
     cout << boolalpha ;
     cout << has_operator_parenthese<int>::value << endl;
@@ -90,8 +103,8 @@ int main()
   //  auto test5 = find_if_maison(test.begin(), test.end() ,[](int x) { return foo(x); });
     //auto test6 = find_if(test.begin(), test.end() ,foo<int> );
 
-    //auto test6 = find_if(test.begin(), test.end() ,[](auto s){(void)s; return true;} );
-    auto test7 = find_if_maison(test.begin(), test.end() ,[](auto s){(void)s; return true;} );
+    auto test6 = find_if(test.begin(), test.end() ,[](auto s){(void)s; return true;} );
+   auto test7 = find_if_maison(test.begin(), test.end() ,[](auto s){(void)s; return true;} );
     exit(5);
     /*cout << nbParam(test2) << endl;
 

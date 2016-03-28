@@ -24,7 +24,7 @@ template<class ReturnType, class ... Args>
 struct informationParamParamFactorisation
 {
     constexpr static size_t arity = sizeof...(Args);
-   /* using  result_type = ReturnType;
+    using  result_type = ReturnType;
 
     template <size_t indice>
     struct arg_type_
@@ -33,7 +33,7 @@ struct informationParamParamFactorisation
         using type= typename std::tuple_element<indice, std::tuple<Args...>>::type;
 
     };
-    template <size_t i> using arg_type = typename arg_type_<i>::type;*/
+    template <size_t i> using arg_type = typename arg_type_<i>::type;
 };
 // operateur () PAS !!! const
 template <typename ClassType, typename ReturnType, typename... Args>
@@ -106,7 +106,7 @@ template<class T> constexpr size_t nbParam()
     // ou que c'est une méthode template / surcharger
     return decltype(getInformationParam(std::declval<T>()))::type::arity;
 }
-/*
+
 template<size_t nb,class T>
 constexpr typename decltype(getInformationParam(std::declval<T>()))::type::template arg_type<nb> typeParam(T fonction );
 
@@ -119,6 +119,6 @@ constexpr typename decltype(getInformationParam(std::declval<T>()))::type::resul
 
 template<class T>
 constexpr typename decltype(getInformationParam(std::declval<T>()))::type::result_type typeRetour( );
-*/
+
 #endif
 

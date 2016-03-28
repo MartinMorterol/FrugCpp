@@ -7,7 +7,7 @@ struct void_if_valide {
     using type = void;
 };
 
-template <class T, class U = void, class V = void>
+template <class T, class U = void>
 struct has_operator_parenthese : std::false_type {};
 
 template <class T>
@@ -23,6 +23,7 @@ struct is_introspectable : std::false_type {};
 template <class T>
 struct is_introspectable <
                 T,
-                typename void_if_valide< typename has_operator_parenthese<T>::type >::type,
-                typename std::enable_if <  std::is_class<T>::value >::type
+                typename std::enable_if < has_operator_parenthese<T>::value, void >::type,
+                typename std::enable_if < std::is_class<T>::value , void  >::type
             >  : std::true_type {};
+

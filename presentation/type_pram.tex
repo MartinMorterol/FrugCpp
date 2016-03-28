@@ -32,7 +32,13 @@
 \end{frame}
 
 \section{Pourquoi ?}
-
+\begin{frame}
+	Je vais présenter deux cas d'utilisations : 
+	\begin{itemize}
+		\item Le premier est celui annoncer dans le résumé du talk. Stoker une fonction passé en tant que template dans une std::function.
+		\item Le deuxième est faire un message d'erreur propre lors d'un mauvais passage de fonction.
+	\end{itemize}
+\end{frame}
 \begin{frame}
 	Contexte : Un petit jeu en 2D.
     \begin{itemize}
@@ -51,11 +57,11 @@
 \end{frame}
 
 \begin{frame}
-	\href{run:FoncteurIterator.cpp}{FoncteurIterator.cpp}\\
+	\href{run:../code/src/iterateurFoncteur.hpp}{FoncteurIterator.hpp}\\
 	Problème : 
 	\begin{itemize}
 		\item Pour utiliser un std::function<> J'ai besoin du type de retour du foncteur et du type du paramètre. 
-		\item J'ai également besoin du type du paramètre pour d'autre chose (l'operator::* par exemple)
+		\item Je ne voulais pas juste utiliser "FoncteurTemplate foncteur" (bien que ça soit le seule solution valide en C++14) pour me forcer à utiliser des choses que je ne connaissait pas.
 	\end{itemize}
 	Solution :
 	\begin{itemize}
@@ -64,9 +70,149 @@
 	\end{itemize}
 \end{frame}
 
-\section{Comment ?}
+\begin{frame}
+	Pour la deuxième application je vais partir de "std::find\_if" et montrer comment on peut améliorer les messages d'erreur. \\
+	Les messages dans se cas ne sont pas horrible mais l’amélioration des messages d'erreur est toujours un plus, surtout en méta-programmation.
+\end{frame}
 
+\section{Prés-requis}
+\begin{frame}
+	Je vais présenter les techniques que j'ai utilisé puis vous présenter la solution en elle même. Il n'y a pas de grosse difficulté mais ça peut faire beaucoup de chose nouvelles pour ceux qui n'ont jamais fait de méta-programmation. 
+\end{frame}
 
+\subsection{La spécialisation}
+
+\begin{frame}[containsverbatim]
+	La spécialisation (partielle ou non) est le fait de, pour une structure, spécifier une partie (ou tous) des types. Dans se cas le compilateur choisir la structure la plus spécialiser.\\
+	
+	\begin{verbatim}
+template< class T > struct is_pointer_helper    
+							 : std::false_type {};
+template< class T > struct is_pointer_helper<T*> 
+							: std::true_type {};
+	\end{verbatim}
+	source : \href{http://en.cppreference.com/w/cpp/types/is_pointer}{cppreference}
+\end{frame}
+
+\begin{frame}[containsverbatim]
+	Si la structure à des types par défaut ils sont déduit avant de regarder quelle structure est la plus spécialisé ( => 1 1 2 0 )
+	\begin{verbatim}
+template <class T, class U = int >
+struct demo { constexpr static int value = 0 ;};
+
+template<class T>
+struct demo <T,int> { constexpr static int value = 1; };
+
+template<class T>
+struct demo <T,void> { constexpr static int value = 2; };
+
+cout << demo<std::string>::value << endl;
+cout << demo<int,int>::value << endl;
+cout << demo<int,void>::value << endl;
+cout << demo<int,std::string>::value << endl;
+	\end{verbatim}
+	
+\end{frame}
+
+\subsection{SFINAE}
+\begin{frame}[containsverbatim]
+	Le principe de SFINAE (Substitution failure is not an error) est que si il y a un type qu'on n'arrive pas à résoudre on ignore simplement la déclaration. Pour les fonctions on peut utiliser le type de retour et les arguments en plus des paramètres template pour faire du SFINAE. \\
+	\href{run:../code_demo/sfinae.cpp}{sfinae.cpp}\\
+\end{frame}
+
+\subsection{Outils utils}
+
+\begin{frame}[containsverbatim]
+decltype : permet de retourner le type d'une expression, ça saute pas forcement au yeux comme ça, mais c'est génial.
+\begin{lstlisting}
+	int a = 4 ;
+	decltype(a) b = 6; // a est un int
+	decltype(monObjet.maMethode()) k; 
+
+	template<
+            class T,
+            class U = decltype(T().begin()),
+            class W = decltype(T().end())
+        >
+     .... 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[containsverbatim]
+declval : répond au probleme suivant : Si on veut connaître le type de retour d'un méthode donc doit faire un decltype sur l'appel de la méthode. Mais comment fait on lorsque le type n'est pas default constructible ? 
+	\begin{verbatim}
+class W = decltype(T().end()) // marche si T() est valide
+class W = decltype(std::decltype<T>().end()) // marche.
+	\end{verbatim}
+
+enbale\_if : enable\_if<false>::type n'existe pas et enable\_if<true>::type existe. enbale\_if prend un deuxième argument optionnel qui donne le type de "::type", par défaut il vaut void.
+\\ 
+same\_if : same\_if<T,U>::value vaut vrais si T==U et faux si non.
+\end{frame}
+
+\subsection{Ecrire un type\_trait}
+\begin{frame}[containsverbatim]
+On a globalement tout ce qui nous faut. On notera juste qu'hériter de std::true\_type ou std::false\_type nous permet de déclarer rapidement un "constexpr static bool value=true/false;"
+\\
+Exemple : \href{run:../code_demo/traits.cpp}{traits.cpp}\\
+
+\end{frame}
+
+\subsection{Remarques}
+\begin{frame}[containsverbatim]
+	Ce code ne marche pas : error: redefinition of template<class T, class U> void foo(const T\&)
+	\begin{verbatim}
+template< class T,
+		  class U =  typename std::enable_if
+		  			 < is_container<T>::value  >::type >
+void foo (const T& t) {
+    std::cout << "je match  les conteneurs" << std::endl;
+}
+template< class T, 
+          class U =  typename std::enable_if
+                     < !is_container<T>::value  >::type >
+void foo (const T& t) {
+    std::cout << "je match pas les conteneurs" << std::endl;
+}
+	\end{verbatim}
+\end{frame}
+\begin{frame}[containsverbatim]
+	Ce code marche, mais le passage à l’échelle est mauvais :/
+	\begin{verbatim}
+template< class T, 
+		  class U =  typename std::enable_if
+		  					< is_container<T>::value  >::type >
+void foo (const T& t) {
+    std::cout << "je match  les conteneurs" << std::endl;
+}
+template< class T,
+		  class U =  typename std::enable_if
+		  					< !is_container<T>::value  >::type,
+          class W =  typename std::enable_i
+          					f< !is_container<T>::value  >::type>
+void foo (const T& t) {
+    std::cout << "je match pas les conteneurs" << std::endl;
+}
+	\end{verbatim}
+\end{frame}
+\begin{frame}[containsverbatim]
+	Celui la marche, passe à l’échelle, mais la lecture du type de retour est moins directe. 
+	\begin{verbatim}
+template< class T >
+typename std::enable_if< 
+             is_container<T>::value, void  >::type
+ foo (const T& t) {
+    std::cout << "je match  les conteneurs" << std::endl;
+}
+template< class T >
+typename std::enable_if< 
+			  ! is_container<T>::value , void  >::type  
+foo (const T& t) {
+    std::cout << "je match pas les conteneurs" << std::endl;
+}
+	\end{verbatim}
+
+\end{frame}
 \begin{frame}[containsverbatim]
 On utilise le fait que les fonctions templates les plus spécialisées ont la priorité.
 \begin{verbatim}
