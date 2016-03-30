@@ -86,6 +86,13 @@ int main()
     static_assert (std::is_same<decltype(typeRetour<structParenthese>())
                                 ,type_result<structParenthese> >::value , "" );
 
+    static_assert (std::is_same<decltype(typeParam<0,structParenthese>())
+                                ,type_param<0,structParenthese> >::value , "" );
+
+
+    static_assert (type_nb_param<structParenthese>::arity == 1 , "" );
+
+
 
     cout << "structParenthese  : " <<  isNotLambdaTemplate<structParenthese>() << endl; ;
     cout << "structVide  : " <<  isNotLambdaTemplate<structVide>() << endl;;

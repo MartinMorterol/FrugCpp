@@ -97,6 +97,9 @@ template<class T> constexpr size_t nbParam()
 {
     return decltype(getInformationParam(std::declval<T>()))::type::arity;
 }
+template<class T>
+using type_nb_param = typename decltype(getInformationParam(std::declval<T>()))::type;
+
 
 template<size_t nb,class T>
 constexpr typename decltype(getInformationParam(std::declval<T>()))::type::template arg_type<nb> typeParam(T fonction );
@@ -104,14 +107,14 @@ constexpr typename decltype(getInformationParam(std::declval<T>()))::type::templ
 template<size_t nb,class T>
 constexpr typename decltype(getInformationParam(std::declval<T>()))::type::template arg_type<nb> typeParam();
 
-
+template<size_t nb,class T>
+using type_param = typename decltype(getInformationParam(std::declval<T>()))::type::template arg_type<nb>;
 
 template<class T>
 constexpr typename decltype(getInformationParam(std::declval<T>()))::type::result_type typeRetour(T fonction );
 
 template<class T>
 constexpr typename decltype(getInformationParam(std::declval<T>()))::type::result_type typeRetour( );
-
 
 template <class T>
 using type_result = typename decltype(getInformationParam(std::declval<T>()))::type::result_type;
