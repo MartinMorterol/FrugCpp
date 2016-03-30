@@ -54,26 +54,15 @@ std::ostream& operator<< (std::ostream& out, const T& container)
 }
 
 template < class T>
-// pourquoi je peux pas faire constT&&
-void foo (T&& t) {
-    foo(std::forward<T>(t), is_container<T> ());
-   //  foo(t, is_container<T> ());
-   
+void foo (const T&, typename std::enable_if<is_container<T>::value>::type* = nullptr) {
+   std::cout <<"je match les conteneurs"<< std::endl;
 }
 
 template < class T>
-// void foo  ( T& t , std::true_type default = std::true_type()  ) ??
-void foo  (T&& t , std::true_type  )
-{
-    (void)t;
-    std::cout<<"je match les conteneurs"<<std::endl;
+void foo (const T&, typename std::enable_if<!is_container<T>::value>::type* = nullptr) {
+   std::cout <<"je match pas les conteneurs"<< std::endl;
 }
-template < class T>
-void foo  (T&& t , std::false_type   )
-{
-    (void)t;
-    std::cout<<"je match pas les conteneurs"<<std::endl;
-}
+
 int main() {
     using namespace std;
     std::vector<int> vec = { 1 ,1 ,2, 3, 5 };

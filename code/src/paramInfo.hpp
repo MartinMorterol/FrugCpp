@@ -105,11 +105,15 @@ template<size_t nb,class T>
 constexpr typename decltype(getInformationParam(std::declval<T>()))::type::template arg_type<nb> typeParam();
 
 
+
 template<class T>
 constexpr typename decltype(getInformationParam(std::declval<T>()))::type::result_type typeRetour(T fonction );
 
 template<class T>
 constexpr typename decltype(getInformationParam(std::declval<T>()))::type::result_type typeRetour( );
 
+
+template <class T>
+using type_result = typename decltype(getInformationParam(std::declval<T>()))::type::result_type;
 #endif
 

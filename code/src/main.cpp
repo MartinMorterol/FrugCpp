@@ -44,9 +44,8 @@ find_if_maison (InputIterator first, InputIterator last, UnaryPredicate pred)
 
 
 template <class T>
-bool isNotLambdaTemplate (T a)
+bool isNotLambdaTemplate (const T&)
 {
-    (void) a;
     return is_not_lamba_template<T>::value;
 }
 
@@ -57,31 +56,42 @@ bool isNotLambdaTemplate ()
 }
 
 template<class T>
-bool foo (const T& t){(void)t; return true;}
+bool foo (const T& ){ return true;}
+
+
+
+
 
 int main()
 {
-    auto lambda_test = [](int s){(void)s; return true;};
+
+    auto lambda_test = [](int ){; return true;};
     static_assert ( std::is_same<bool, decltype(typeRetour(lambda_test))>::value , "" );
     static_assert (std::is_same<bool,decltype(getInformationParam(lambda_test))::type::result_type>::value , "" );
+    static_assert (std::is_same<bool,type_result<decltype(lambda_test)> >::value , "" );
+    static_assert (std::is_same<bool,type_result<decltype(lambda_test)> >::value , "" );
 
     using namespace std;
     cout << boolalpha ;
-    cout << "[](int a ){}  : "  <<  isNotLambdaTemplate([](int a ){ (void) a ;}) << endl;
-    cout << "[](auto a ){}  : " <<  isNotLambdaTemplate([](auto a ){ (void) a ;}) << endl;;
+    cout << "[](int a ){}  : "  <<  isNotLambdaTemplate([](int ){}) << endl;
+    cout << "[](auto a ){}  : " <<  isNotLambdaTemplate([](auto  ){}) << endl;;
     cout << "int  : "           <<  isNotLambdaTemplate(1) << endl;;
 
     struct structVide {};
 
     struct structParenthese {
-        bool operator()(int a){(void) a; return true;}
+        bool operator()(int ){ return true;}
     };
+
+    static_assert (std::is_same<decltype(typeRetour<structParenthese>())
+                                ,type_result<structParenthese> >::value , "" );
+
 
     cout << "structParenthese  : " <<  isNotLambdaTemplate<structParenthese>() << endl; ;
     cout << "structVide  : " <<  isNotLambdaTemplate<structVide>() << endl;;
 
     std::vector<int> vec =  { 1 ,2 ,3 , 4 };
-    auto lambda = [](int s){(void)s; return true;};
+    auto lambda = [](int ){return true;};
     find_if_maison  (vec.begin(), vec.end() ,lambda);
     find_if         (vec.begin(), vec.end() ,lambda);
 
@@ -89,8 +99,8 @@ int main()
     find_if_maison(vec.begin(), vec.end() , foo<int> );
 
 
-    find_if(vec.begin(), vec.end() ,            [](auto s){(void)s; return true;} );
-    find_if_maison(vec.begin(), vec.end() ,     [](auto s){(void)s; return true;} );
+    find_if(vec.begin(), vec.end() ,            [](auto ){ return true;} );
+    find_if_maison(vec.begin(), vec.end() ,     [](auto ){ return true;} );
 
     structParenthese test;
     find_if(vec.begin(), vec.end() ,        test );
@@ -99,14 +109,14 @@ int main()
     //find_if(vec.begin(), vec.end(),          5);
     //find_if_maison(vec.begin(), vec.end() ,  5);
 
-    //find_if(vec.begin(), vec.end() ,        [](string s){(void)s; return true;} );
-    //find_if_maison(vec.begin(), vec.end() , [](string s){(void)s; return true;} );
+    //find_if(vec.begin(), vec.end() ,        [](string ){ return true;} );
+    //find_if_maison(vec.begin(), vec.end() , [](string ){ return true;} );
 
-    //find_if(vec.begin(), vec.end() ,        [](int s){(void)s; return 5;} );
-    //find_if_maison(vec.begin(), vec.end() , [](int s){(void)s; return 5;} );
+    //find_if(vec.begin(), vec.end() ,        [](int ){ return 5;} );
+    //find_if_maison(vec.begin(), vec.end() , [](int ){ return 5;} );
 
-    //find_if(vec.begin(), vec.end() ,        [](int s, int b){(void)s; return false;} );
-    //find_if_maison(vec.begin(), vec.end() , [](int s, int b){(void)s; return false;} );
+    //find_if(vec.begin(), vec.end() ,        [](int , int ){ return false;} );
+    //find_if_maison(vec.begin(), vec.end() , [](int , int ){ return false;} );
 
     return 0;
 }

@@ -16,7 +16,7 @@
                 stringstyle=\color{red},
                 commentstyle=\color{OliveGreen},
                 morecomment=[l][\color{magenta}]{\#},
-                 basicstyle=\small\ttfamily,
+                 basicstyle=\footnotesize\ttfamily,
                  morekeywords={decltype }
 }
 
@@ -42,29 +42,34 @@
 \begin{frame}
 	Cas d'utilisations : 
 	\begin{itemize}
-		\item Le premier est celui annoncé dans le résumé du talk. Stocker une fonction passé en tant que template dans une \lstinline{std::function}.
+		\item Le premier est celui annoncé dans le résumé du talk.
+		\item[] Stocker une fonction passée en tant que template dans une \lstinline{std::function}.
 		\item Le deuxième est faire un message d'erreur propre lors d'un mauvais passage de fonction.
 	\end{itemize}
 \end{frame}
 \begin{frame}
 	Contexte : Un petit jeu en 2D.
     \begin{itemize}
-    	\item Une carte est un conteneur au sens de la STL.
+    	\item Une carte est un conteneur (comme vector, map...).
     	\item On peut donc l'utiliser dans un for range.
     \end{itemize}
     Problème : 
     \begin{itemize}
     	\item Une carte contient des \lstinline{std::reference_wrappeur<Case>}.
-    	\item J'ai pas envie que l'utilisateur connaisse ma structure interne ni qu'il en dépende.
-    	\item J'ai pas envie d’écrire .get() à chaque fois. 
+    	\item Je n'ai pas envie que l'utilisateur connaisse ma structure interne ni qu'il en dépende.
+    	\item Je n'ai pas envie d’écrire .get() à chaque fois. 
     	\item J'ai envie de me faire plaisir ça sert à ça les projets perso :)
     \end{itemize}
     Solution : Je crée mon iterateur maison que j'appelle FoncteurIterator.
+  
     
 \end{frame}
-
 \begin{frame}[containsverbatim]
-	\href{run:../code/src/iterateurFoncteur.hpp}{FoncteurIterator.hpp}\\
+
+	Exemple : \href{run:../code_demo/iterator.cpp}{iterator.cpp}		
+		
+\end{frame}
+\begin{frame}[containsverbatim]
 	Problème : 
 	\begin{itemize}
 		\item Pour utiliser un \lstinline{std::function<>} J'ai besoin du type de retour du foncteur et du type du paramètre. 
@@ -86,7 +91,7 @@ FoncteurIterator< IteratorTemplates,
 \\
 		Problème : 
 	\begin{itemize}
-		\item Les erreurs des méthodes attendant un "callable" sont vite moche.
+		\item Les erreurs des méthodes attendant un "callable" sont vites moches.
 		\item Exemple avec \lstinline{std::find_if}.
 	\end{itemize}
 	Solution :
@@ -95,10 +100,10 @@ FoncteurIterator< IteratorTemplates,
 		\item Trouver un moyen de faire de \lstinline{static_assert} sur le type de retour et les paramètres. 
 	\end{itemize}
 	
-	Les messages dans se cas ne sont pas horrible mais l’amélioration des messages d'erreur est toujours un plus, surtout en méta-programmation.
+	Les messages, dans ce cas, ne sont pas horrible mais l’amélioration des messages d'erreur est toujours un plus, surtout en méta-programmation.
 \end{frame}
 
-\section{Pré-requis}
+\section{Prérequis}
 %\begin{frame}
 %	Je vais présenter les techniques que j'ai utilisé puis vous présenter la solution en elle même. Il n'y a pas de grosse difficulté mais ça peut faire beaucoup de chose nouvelles pour ceux qui n'ont jamais fait de méta-programmation. 
 %\end{frame}
@@ -118,7 +123,7 @@ template< class T > struct is_pointer_helper<T*>
 \end{frame}
 
 \begin{frame}[containsverbatim]
-	Si la structure à des types par défaut ils sont déduit avant de regarder quelle structure est la plus spécialisé
+	Si la structure à des types par défaut ils sont déduits avant de regarder quelle structure est la plus spécialisée.
 	\begin{lstlisting}
 template <class T, class U = int >
 struct demo { constexpr static int value = 0 ;};
@@ -172,15 +177,15 @@ decltype : permet de retourner le type d'une expression, ça saute pas forcement
 \end{frame}
 
 \begin{frame}[containsverbatim]
-declval : répond au probleme suivant : Si on veut connaître le type de retour d'un méthode donc doit faire un decltype sur l'appel de la méthode. Mais comment fait on lorsque le type n'est pas default constructible ? 
+\lstinline{std::declval} : répond au problème suivant : Si on veut connaître le type de retour d'un méthode donc doit faire un decltype sur l'appel de la méthode. Mais comment faire lorsque le type n'est pas default constructible ? 
 	\begin{lstlisting}
 class W = decltype(T().end())// marche si T() est valide
 class W = decltype(std::declval<T>().end()) // marche.
 	\end{lstlisting}
 	
-\lstinline{enbale_if} : \lstinline{enable_if<false>::type} n'existe pas et \lstinline{enable_if<true>::type} existe. \lstinline{enbale_if} prend un deuxième argument optionnel qui donne le type de "\lstinline{::type}", par défaut il vaut void.
+\lstinline{std::enbale_if} : \lstinline{enable_if<false>::type} n'existe pas et \lstinline{std::enable_if<true>::type} existe. \lstinline{enbale_if} prend un deuxième argument optionnel qui donne le type de "\lstinline{::type}", par défaut il vaut void.
 \\ 
-\lstinline{is_same} : \lstinline{is_same<T,U>::value} vaut vrais si T==U et faux si non.
+\lstinline{std::is_same} : \lstinline{is_same<T,U>::value} vaut vrais si T==U et faux si non.
 
 \end{frame}
 
@@ -250,24 +255,41 @@ foo (const T& t) {
 	\end{lstlisting}
 
 \end{frame}
-
 \begin{frame}[containsverbatim]
-type dispatching
+	On peut aussi utiliser un paramètre par défaut, en utilisant un pointeur que l'on initialise à null.
 	\begin{lstlisting}
 template < class T>
-void foo (T&& t) {
-    foo(std::forward<T>(t), is_container<T> ()); 
+void foo (const T&, typename std::enable_if<
+              is_container<T>::value>::type* = nullptr) {
+   std::cout <<"je match les conteneurs"<< std::endl;
 }
 
+template < class T>
+void foo (const T&, typename std::enable_if<
+             !is_container<T>::value>::type* = nullptr) {
+   std::cout <<"je match pas les conteneurs"<< std::endl;
+}
+	\end{lstlisting}
+
+\end{frame}
+\begin{frame}[containsverbatim]
+Et enfin on peut utiliser du type dispatching :
+	\begin{lstlisting}
 template < class T>
 void foo  (T&& t , std::true_type  )
 {
     std::cout<<"je match les conteneurs"<<std::endl;
 }
+
 template < class T>
 void foo  (T&& t , std::false_type   )
 {
     std::cout<<"je match pas les conteneurs"<<std::endl;
+}
+
+template < class T>
+void foo (T&& t) {
+    foo(std::forward<T>(t), is_container<T> ()); 
 }
 	\end{lstlisting}
 
@@ -281,6 +303,14 @@ decltype(typeRetour(lambda))
 vs
 decltype(getInformationParam(lambda))::type::
                                   result_type>::value
+vs
+type_result<decltype(lambda_test)> 
+	\end{lstlisting}
+Le dernier utilise \texttt{c++14} et les usings template, c'est sans doute le plus simple lorsqu'un utilise une classe "callable".
+	\begin{lstlisting}
+decltype(typeRetour<structParenthese>())
+vs
+type_result<structParenthese>  
 	\end{lstlisting}
 
 \end{frame}
@@ -349,7 +379,6 @@ struct informationParam{
 \end{lstlisting}
 \end{frame}
 
-
 \begin{frame}
 Si on résume, ça nous donne : 
 	\href{run:../code/src/paramInfo.hpp}{paramInfo.hpp}\\
@@ -357,8 +386,6 @@ Si on résume, ça nous donne :
 
 \end{frame}
 
-
-\section{L'utilisation}
 %\begin{frame}[containsverbatim]
 %La fonction qui donne le nombre d'argument, j'ai pas réussi à faire un beau message d'erreur, du coup j'ai mis un commentaire la ou le compilateur va envoyer l'utilisateur. Mieux que rien...
 %\begin{lstlisting}
@@ -410,7 +437,11 @@ constexpr typename decltype(getInformationParam(
 
 \end{frame} 
 
+\begin{frame}
+Puisqu'on est chaud on peut regarde l'application au notre \lstinline{std::find_if} \\ source : \href{run:../code/src/main.cpp}{main.cpp}\\
 
+
+\end{frame}
 
 \begin{frame}
     \begin{center}
