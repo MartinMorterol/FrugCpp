@@ -4,17 +4,21 @@
 
 template <class T>
 typename T::value_type fonction_sfinae (const T& t){
+    (void)t;
     std::cout << "Le type T::value_type a un sens " << std::endl;
     return typename T::value_type(); // je supose qu'il est default constructible mais c'est juste pour l'exemple.
 }
 
 template <class T>
 void fonction_sfinae(const T& t, typename T::bibi d = 1) {
+    (void)t;
+    (void)d;
      std::cout << "Le type T::bibi a un sens " << std::endl;
 }
 
 template <class T, class U = typename T::boo >
-void fonction_sfinae(const T&) {
+void fonction_sfinae(const T& t) {
+    (void)t;
      std::cout << "Le type T::boo a un sens " << std::endl;
 }
 

@@ -63,15 +63,6 @@ struct informationParam<ReturnType(*)(Args...)>
 {
     using type = informationParamParamFactorisation<ReturnType,Args...>;
 };
-/* a voir
-// ref de fonction
-template < typename ReturnType, typename... Args>
-struct informationParam<ReturnType(&)(Args...)>
-{
-    using type = informationParamParamFactorisation<ReturnType,Args...>;
-};
-*/
-
 
 template    <
                 class T,
@@ -90,10 +81,6 @@ template    <
 informationParam<T> getInformationParam (T t);
 
 
-// Le plus spécialisé c'est que pour l'overload (donc des param de la fonction != )
-// et ici je fait  sfinae et tout candidat est bon
-// dans can be check : spécialisation ( on prend le plus spé aussi )
-// on ne peut pas faire de sfinae avec les classe en dehors de dans la spécialisation
 /**
     Les methodes pour l'utilisation simple de ce qu'il y a avant toujours avec 2 ecritures possible
 

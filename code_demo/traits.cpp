@@ -54,6 +54,7 @@ std::ostream& operator<< (std::ostream& out, const T& container)
 }
 
 template < class T>
+// pourquoi je peux pas faire constT&&
 void foo (T&& t) {
     foo(std::forward<T>(t), is_container<T> ());
    //  foo(t, is_container<T> ());
