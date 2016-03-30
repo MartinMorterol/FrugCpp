@@ -1,26 +1,33 @@
 \documentclass{beamer}
-
+\usepackage{listings}
 \usepackage[utf8]{inputenc}  
 \usepackage[french]{babel}
 \usepackage[T1]{fontenc} 
 \usepackage{listings}
 
 
-\usepackage{multimedia}
-\usepackage{graphicx}
-\usepackage[normalem]{ulem} %tentative de barer un text
-\usepackage{tabularx}
 
 \graphicspath{images/}
 \usetheme{Luebeck}
 \usecolortheme{crane}
+\definecolor{OliveGreen}{rgb}{0.1,0.6,0.1}
+\lstset{language=C++,
+                keywordstyle=\color{blue},
+                stringstyle=\color{red},
+                commentstyle=\color{OliveGreen},
+                morecomment=[l][\color{magenta}]{\#},
+                 basicstyle=\small\ttfamily,
+                 morekeywords={decltype }
+}
+
+
 
 
 \input{mise_en_page_globale.tex}
 
 
 \title{Déduction des types des paramètres}
-\author{\url{Martin Morterol}}
+\author{Martin~Morterol}
 \date{\today}
 
 
@@ -33,9 +40,9 @@
 
 \section{Pourquoi ?}
 \begin{frame}
-	Je vais présenter deux cas d'utilisations : 
+	Cas d'utilisations : 
 	\begin{itemize}
-		\item Le premier est celui annoncer dans le résumé du talk. Stoker une fonction passé en tant que template dans une std::function.
+		\item Le premier est celui annoncé dans le résumé du talk. Stocker une fonction passé en tant que template dans une \lstinline{std::function}.
 		\item Le deuxième est faire un message d'erreur propre lors d'un mauvais passage de fonction.
 	\end{itemize}
 \end{frame}
@@ -47,7 +54,7 @@
     \end{itemize}
     Problème : 
     \begin{itemize}
-    	\item Une carte contient des std::reference\_wrappeur<Case>.
+    	\item Une carte contient des \lstinline{std::reference_wrappeur<Case>}.
     	\item J'ai pas envie que l'utilisateur connaisse ma structure interne ni qu'il en dépende.
     	\item J'ai pas envie d’écrire .get() à chaque fois. 
     	\item J'ai envie de me faire plaisir ça sert à ça les projets perso :)
@@ -56,74 +63,100 @@
     
 \end{frame}
 
-\begin{frame}
+\begin{frame}[containsverbatim]
 	\href{run:../code/src/iterateurFoncteur.hpp}{FoncteurIterator.hpp}\\
 	Problème : 
 	\begin{itemize}
-		\item Pour utiliser un std::function<> J'ai besoin du type de retour du foncteur et du type du paramètre. 
+		\item Pour utiliser un \lstinline{std::function<>} J'ai besoin du type de retour du foncteur et du type du paramètre. 
 		\item Je ne voulais pas juste utiliser "FoncteurTemplate foncteur" (bien que ça soit le seule solution valide en C++14) pour me forcer à utiliser des choses que je ne connaissait pas.
 	\end{itemize}
 	Solution :
 	\begin{itemize}
-		\item FoncteurIterator< IteratorTemplates, FoncteurTemplate, typeRetour, typeParam>, Ok mais j'aime pas 
+		\item Solution Ok mais moche : 
+	\begin{lstlisting}
+FoncteurIterator< IteratorTemplates,
+    FoncteurTemplate,typeRetour, typeParam>
+	\end{lstlisting}		
 		\item Trouver un moyen de déduire typeRetour et typeParam directement de FoncteurTemplate. 
 	\end{itemize}
 \end{frame}
 
 \begin{frame}
-	Pour la deuxième application je vais partir de "std::find\_if" et montrer comment on peut améliorer les messages d'erreur. \\
+	Pour la deuxième application :  
+\\
+		Problème : 
+	\begin{itemize}
+		\item Les erreurs des méthodes attendant un "callable" sont vite moche.
+		\item Exemple avec \lstinline{std::find_if}.
+	\end{itemize}
+	Solution :
+	\begin{itemize}
+		\item Encapsuler \lstinline{std::find_if}.
+		\item Trouver un moyen de faire de \lstinline{static_assert} sur le type de retour et les paramètres. 
+	\end{itemize}
+	
 	Les messages dans se cas ne sont pas horrible mais l’amélioration des messages d'erreur est toujours un plus, surtout en méta-programmation.
 \end{frame}
 
-\section{Prés-requis}
-\begin{frame}
-	Je vais présenter les techniques que j'ai utilisé puis vous présenter la solution en elle même. Il n'y a pas de grosse difficulté mais ça peut faire beaucoup de chose nouvelles pour ceux qui n'ont jamais fait de méta-programmation. 
-\end{frame}
+\section{Pré-requis}
+%\begin{frame}
+%	Je vais présenter les techniques que j'ai utilisé puis vous présenter la solution en elle même. Il n'y a pas de grosse difficulté mais ça peut faire beaucoup de chose nouvelles pour ceux qui n'ont jamais fait de méta-programmation. 
+%\end{frame}
 
 \subsection{La spécialisation}
 
 \begin{frame}[containsverbatim]
 	La spécialisation (partielle ou non) est le fait de, pour une structure, spécifier une partie (ou tous) des types. Dans se cas le compilateur choisir la structure la plus spécialiser.\\
 	
-	\begin{verbatim}
+	\begin{lstlisting}
 template< class T > struct is_pointer_helper    
-							 : std::false_type {};
+                     : std::false_type {};
 template< class T > struct is_pointer_helper<T*> 
-							: std::true_type {};
-	\end{verbatim}
-	source : \href{http://en.cppreference.com/w/cpp/types/is_pointer}{cppreference}
+                     : std::true_type {};
+	\end{lstlisting}
+	source du code : \href{http://en.cppreference.com/w/cpp/types/is_pointer}{cppreference}
 \end{frame}
 
 \begin{frame}[containsverbatim]
-	Si la structure à des types par défaut ils sont déduit avant de regarder quelle structure est la plus spécialisé ( => 1 1 2 0 )
-	\begin{verbatim}
+	Si la structure à des types par défaut ils sont déduit avant de regarder quelle structure est la plus spécialisé
+	\begin{lstlisting}
 template <class T, class U = int >
 struct demo { constexpr static int value = 0 ;};
 
 template<class T>
-struct demo <T,int> { constexpr static int value = 1; };
+struct demo <T,int> {constexpr static int value = 1;};
 
 template<class T>
-struct demo <T,void> { constexpr static int value = 2; };
+struct demo <T,void> {constexpr static int value = 2;};
 
-cout << demo<std::string>::value << endl;
-cout << demo<int,int>::value << endl;
-cout << demo<int,void>::value << endl;
-cout << demo<int,std::string>::value << endl;
-	\end{verbatim}
+cout << demo<std::string>::value << endl;     // 1
+cout << demo<int,int>::value << endl;         // 1
+cout << demo<int,void>::value << endl;        // 2
+cout << demo<int,std::string>::value << endl; // 0
+	\end{lstlisting}
 	
 \end{frame}
 
 \subsection{SFINAE}
 \begin{frame}[containsverbatim]
-	Le principe de SFINAE (Substitution failure is not an error) est que si il y a un type qu'on n'arrive pas à résoudre on ignore simplement la déclaration. Pour les fonctions on peut utiliser le type de retour et les arguments en plus des paramètres template pour faire du SFINAE. \\
-	\href{run:../code_demo/sfinae.cpp}{sfinae.cpp}\\
+
+	\begin{itemize}
+		\item Substitution failure is not an error : Si on arrive pas à résoudre la déclaration, on l'ignore.
+		\begin{itemize}
+			\item Pour les structures : Dans les type template et les types de spécialisation.
+			\item Pour les fonctions : Dans les types template, les arguments, et le type de retour.
+		\end{itemize}
+		\item Exemple : \href{run:../code_demo/sfinae.cpp}{sfinae.cpp}
+	\end{itemize}
+
+	
 \end{frame}
 
-\subsection{Outils utils}
+\subsection{Outils utiles}
 
 \begin{frame}[containsverbatim]
 decltype : permet de retourner le type d'une expression, ça saute pas forcement au yeux comme ça, mais c'est génial.
+
 \begin{lstlisting}
 	int a = 4 ;
 	decltype(a) b = 6; // a est un int
@@ -140,20 +173,25 @@ decltype : permet de retourner le type d'une expression, ça saute pas forcement
 
 \begin{frame}[containsverbatim]
 declval : répond au probleme suivant : Si on veut connaître le type de retour d'un méthode donc doit faire un decltype sur l'appel de la méthode. Mais comment fait on lorsque le type n'est pas default constructible ? 
-	\begin{verbatim}
-class W = decltype(T().end()) // marche si T() est valide
-class W = decltype(std::decltype<T>().end()) // marche.
-	\end{verbatim}
-
-enbale\_if : enable\_if<false>::type n'existe pas et enable\_if<true>::type existe. enbale\_if prend un deuxième argument optionnel qui donne le type de "::type", par défaut il vaut void.
+	\begin{lstlisting}
+class W = decltype(T().end())// marche si T() est valide
+class W = decltype(std::declval<T>().end()) // marche.
+	\end{lstlisting}
+	
+\lstinline{enbale_if} : \lstinline{enable_if<false>::type} n'existe pas et \lstinline{enable_if<true>::type} existe. \lstinline{enbale_if} prend un deuxième argument optionnel qui donne le type de "\lstinline{::type}", par défaut il vaut void.
 \\ 
-same\_if : same\_if<T,U>::value vaut vrais si T==U et faux si non.
+\lstinline{is_same} : \lstinline{is_same<T,U>::value} vaut vrais si T==U et faux si non.
+
 \end{frame}
 
 \subsection{Ecrire un type\_trait}
 \begin{frame}[containsverbatim]
-On a globalement tout ce qui nous faut. On notera juste qu'hériter de std::true\_type ou std::false\_type nous permet de déclarer rapidement un "constexpr static bool value=true/false;"
-\\
+\begin{itemize}
+	\item Hériter de \lstinline{std::true_type} ou \lstinline{std::false_type} nous permet de déclarer rapidement un \lstinline{constexpr static bool value=true/false;}
+	\item On a tout ce qui nous faut !
+\end{itemize}
+
+
 Exemple : \href{run:../code_demo/traits.cpp}{traits.cpp}\\
 
 \end{frame}
@@ -161,148 +199,187 @@ Exemple : \href{run:../code_demo/traits.cpp}{traits.cpp}\\
 \subsection{Remarques}
 \begin{frame}[containsverbatim]
 	Ce code ne marche pas : error: redefinition of template<class T, class U> void foo(const T\&)
-	\begin{verbatim}
+	\begin{lstlisting}
 template< class T,
-		  class U =  typename std::enable_if
-		  			 < is_container<T>::value  >::type >
+          class U = typename std::enable_if
+                    < is_container<T>::value>::type>
 void foo (const T& t) {
-    std::cout << "je match  les conteneurs" << std::endl;
+    std::cout <<"je match les conteneurs"<< std::endl;
 }
 template< class T, 
           class U =  typename std::enable_if
-                     < !is_container<T>::value  >::type >
+                     < !is_container<T>::value>::type>
 void foo (const T& t) {
-    std::cout << "je match pas les conteneurs" << std::endl;
+    std::cout<<"je match pas les conteneurs"<<std::endl;
 }
-	\end{verbatim}
+	\end{lstlisting}
 \end{frame}
 \begin{frame}[containsverbatim]
 	Ce code marche, mais le passage à l’échelle est mauvais :/
-	\begin{verbatim}
-template< class T, 
-		  class U =  typename std::enable_if
-		  					< is_container<T>::value  >::type >
-void foo (const T& t) {
-    std::cout << "je match  les conteneurs" << std::endl;
-}
+	\begin{lstlisting}
 template< class T,
-		  class U =  typename std::enable_if
-		  					< !is_container<T>::value  >::type,
-          class W =  typename std::enable_i
-          					f< !is_container<T>::value  >::type>
+          class U = typename std::enable_if
+                    < is_container<T>::value>::type>
 void foo (const T& t) {
-    std::cout << "je match pas les conteneurs" << std::endl;
+    std::cout <<"je match les conteneurs"<< std::endl;
 }
-	\end{verbatim}
+template< class T, 
+          class U =  typename std::enable_if
+                     < !is_container<T>::value>::type,
+          class V = void >
+void foo (const T& t) {
+    std::cout<<"je match pas les conteneurs"<<std::endl;
+}
+	\end{lstlisting}
 \end{frame}
 \begin{frame}[containsverbatim]
 	Celui la marche, passe à l’échelle, mais la lecture du type de retour est moins directe. 
-	\begin{verbatim}
+	\begin{lstlisting}
 template< class T >
 typename std::enable_if< 
-             is_container<T>::value, void  >::type
- foo (const T& t) {
-    std::cout << "je match  les conteneurs" << std::endl;
-}
-template< class T >
-typename std::enable_if< 
-			  ! is_container<T>::value , void  >::type  
+        is_container<T>::value, void  >::type
 foo (const T& t) {
-    std::cout << "je match pas les conteneurs" << std::endl;
+    std::cout <<"je match les conteneurs"<< std::endl;
 }
-	\end{verbatim}
+template< class T >
+typename std::enable_if< 
+        ! is_container<T>::value , void  >::type  
+foo (const T& t) {
+    std::cout<<"je match pas les conteneurs"<<std::endl;
+}
+	\end{lstlisting}
 
 \end{frame}
-\begin{frame}[containsverbatim]
-On utilise le fait que les fonctions templates les plus spécialisées ont la priorité.
-\begin{verbatim}
-template <class T> struct informationParam 
-
-template <typename ClassType, typename ReturnType,
-          typename... Args>
-struct informationParam<ReturnType(ClassType::*)(Args...) >
-
-template <typename ClassType, typename ReturnType,
-          typename... Args>
-struct informationParam<ReturnType(ClassType::*)(Args...)
-                        const>
-
-template < typename ReturnType, typename... Args>
-struct informationParam<ReturnType(*)(Args...)>
-\end{verbatim}
-
-\end{frame} 
-
 
 \begin{frame}[containsverbatim]
-Le gros de la magie est fait, il reste à faire le traitement.
-\begin{verbatim}
+type dispatching
+	\begin{lstlisting}
+template < class T>
+void foo (T&& t) {
+    foo(std::forward<T>(t), is_container<T> ()); 
+}
+
+template < class T>
+void foo  (T&& t , std::true_type  )
+{
+    std::cout<<"je match les conteneurs"<<std::endl;
+}
+template < class T>
+void foo  (T&& t , std::false_type   )
+{
+    std::cout<<"je match pas les conteneurs"<<std::endl;
+}
+	\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[containsverbatim]
+	\frametitle{Fonction d'aide}
+	On peut utiliser simplifier l’écriture du code utilisateur que ça soit au niveau du type de retour ou grâce à la déduction automatique du type.
+	\begin{lstlisting}
+decltype(typeRetour(lambda))
+vs
+decltype(getInformationParam(lambda))::type::
+                                  result_type>::value
+	\end{lstlisting}
+
+\end{frame}
+\section{Déduction de type}
+\begin{frame}[containsverbatim]
+On stocke simplement les informations que l'on veut
+\begin{lstlisting}
 template<class ReturnType, class ... Args>
 struct informationParamParamFactorisation{
     constexpr static size_t arity = sizeof...(Args);
     using  result_type = ReturnType;
     template <size_t indice>
     struct arg_type_{
-        static_assert ((indice < arity ), "msg d'erreur" );
-        using type= typename std::tuple_element<indice,
-                    std::tuple<Args...>>::type;
+       static_assert((indice < arity ), "msg d'erreur");
+       using type= typename std::tuple_element<indice,
+                           std::tuple<Args...>>::type;
 
     };
     template <size_t i> using arg_type = 
-                               typename arg_type_<i>::type;
+                           typename arg_type_<i>::type;
 };
-\end{verbatim}
+\end{lstlisting}
+\end{frame}
+\begin{frame}[containsverbatim]
+On utilise le fait que les fonctions templates les plus spécialisées ont la priorité.
+\begin{lstlisting}
+template <class T> struct informationParam 
+
+template <typename ClassType, typename ReturnType,
+                                      typename... Args>
+struct informationParam<ReturnType(ClassType::*)
+                                             (Args...)>
+template <typename ClassType, typename ReturnType,
+                                      typename... Args>
+struct informationParam<ReturnType(ClassType::*)
+                                       (Args...) const>
+
+template < typename ReturnType, typename... Args>
+struct informationParam<ReturnType(*)(Args...)>
+\end{lstlisting}
+
 \end{frame} 
+
+
+ 
 
 \begin{frame}[containsverbatim]
 Maintenant on prend soin de nos utilisateurs en mettant des erreurs claires. 
-\begin{verbatim}
+\begin{lstlisting}
 template <class... T>
 class ERREUR;
-
-// Le cas general si on arrive la c'est qu'on a perdu,
-//  on compile pas et on informe l'utilisateur
-//  que "ERREUR<LeParamNestPasUneFonction>"
-
 template <class T>
 struct informationParam{
-    struct LeParamNestPasUneFonction {};
-    ERREUR<LeParamNestPasUneFonction> erreur;
+    struct IsNotACallable {};
+    ERREUR<T,IsNotACallable> erreur;
 };
-\end{verbatim}
+vs
+template <class T>
+struct informationParam{
+    static_assert(
+         std::is_same < T, typename void_if_valide<T>
+                                ::type >::value &&false,
+               "L'argument template n'est pas callable"
+              );};
+
+\end{lstlisting}
 \end{frame}
 
 
 \begin{frame}
 Si on résume, ça nous donne : 
-	\href{run:paramInfo.hpp}{paramInfo.hpp}\\
+	\href{run:../code/src/paramInfo.hpp}{paramInfo.hpp}\\
 
 
 \end{frame}
 
 
 \section{L'utilisation}
-\begin{frame}[containsverbatim]
-La fonction qui donne le nombre d'argument, j'ai pas réussi à faire un beau message d'erreur, du coup j'ai mis un commentaire la ou le compilateur va envoyer l'utilisateur. Mieux que rien...
-\begin{verbatim}
-template<class T>
-constexpr size_t nbParam(T fonction){
-    // si ça plante ici c'est que ta classe elle a pas
-                                  d'operateur () , noob
-    return decltype(getInformationParam(fonction))
-                                         ::type::arity;
-}
-template<class T> constexpr size_t nbParam(){
-    return decltype(getInformationParam(std::declval<T>()))
-    			::type::arity; // idem (pas de place dans le slide)
-}
-\end{verbatim}
-
-\end{frame} 
+%\begin{frame}[containsverbatim]
+%La fonction qui donne le nombre d'argument, j'ai pas réussi à faire un beau message d'erreur, du coup j'ai mis un commentaire la ou le compilateur va envoyer l'utilisateur. Mieux que rien...
+%\begin{lstlisting}
+%template<class T>
+%constexpr size_t nbParam(T fonction){
+%    // si ça plante ici c'est que ta classe elle a pas
+%                                  d'operateur () , noob
+%    return decltype(getInformationParam(fonction))
+%                                         ::type::arity;
+%}
+%template<class T> constexpr size_t nbParam(){
+%    return decltype(getInformationParam(std::declval<T>()))
+%    			::type::arity; // idem (pas de place dans le slide)
+%}
+%\end{lstlisting}
+%
+%\end{frame} 
 
 \begin{frame}[containsverbatim]
 La fonction principale, avec deux écritures en fonction de ce qui est le plus simple pour l'utilisateur. 
-\begin{verbatim}
+\begin{lstlisting}
 template<size_t nb,class T>
 constexpr typename decltype(getInformationParam(
     std::declval<T>()))::type::template arg_type<nb>
@@ -312,14 +389,14 @@ template<size_t nb,class T>
 constexpr typename decltype(getInformationParam(
      std::declval<T>()))::type::template arg_type<nb>
      typeParam();
-\end{verbatim}
+\end{lstlisting}
 
 \end{frame} 
 
 
 \begin{frame}[containsverbatim]
 Et puisque que ça me coûte rien je fais le même avec le type de retour.  
-\begin{verbatim}
+\begin{lstlisting}
 template<class T>
 constexpr typename decltype(getInformationParam(
     std::declval<T>()))::type::result_type 
@@ -329,7 +406,7 @@ template<class T>
 constexpr typename decltype(getInformationParam(
     std::declval<T>()))::type::result_type 
     typeRetour( );
-\end{verbatim}
+\end{lstlisting}
 
 \end{frame} 
 

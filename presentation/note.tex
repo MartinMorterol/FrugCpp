@@ -134,11 +134,11 @@ Le fonctionnement est assez proche de auto, mais les règles ne sont pas exactem
 
 declval : répond au probleme suivant : Si on veut connaître le type de retour d'un méthode donc doit faire un decltype sur l'appel de la méthode. Mais comment fait on lorsque le type n'est pas default constructible ? 
 class W = decltype(T().end()) // marche si T() est valide
-class W = decltype(std::decltype<T>().end()) // marche.
+class W = decltype(std::declval<T>().end()) // marche.
 \\
 enbale\_if : enable\_if<false>::type n'existe pas et enable\_if<true>::type existe (et ça vaut void)
 \\ 
-same\_if : same\_if<T,U>::value vaut vrais si T==U et faux si non.
+is\_same : is\_same<T,U>::value vaut vrais si T==U et faux si non.
 
 A noter : 
 \begin{lstlisting}

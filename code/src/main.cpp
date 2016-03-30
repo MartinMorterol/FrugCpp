@@ -8,38 +8,11 @@
 #include "paramInfo.hpp"
 #include "can_be_check.hpp"
 #include "type_traits.hpp"
-/*
-struct Bidon {
-    int a = 5 ;
-    int b = 6 ;
-    int c = 7 ;
-
-    std::vector<std::reference_wrapper<int>> vec;
-
-
-    Bidon() {
-        vec.push_back(std::ref(a));
-        vec.push_back(std::ref(b));
-        vec.push_back(std::ref(c));
-    }
-
-    // Le parcourt des cases
-    using iterator = FoncteurIterator<std::vector<std::reference_wrapper<int>>::iterator,std::UnWrappe<int>>;
-    using const_iterator = FoncteurIterator<std::vector<std::reference_wrapper<int>>::const_iterator,std::UnWrappe<int>>;
-
-    inline iterator begin()                     { return iterator(vec.begin());         }
-   // inline const_iterator begin() const         { return const_iterator(vec.begin());   }
-    inline iterator end()                       { return iterator(vec.end());           }
-    //inline const_iterator end() const           { return const_iterator(vec.end());     }
-};
-*/
-
-
 
 
 template<class InputIterator, class UnaryPredicate>
 typename std::enable_if <
-                            is_introspectable<UnaryPredicate>::value ,
+                            is_not_lamba_template<UnaryPredicate>::value ,
                             InputIterator
                         >::type
 find_if_maison (InputIterator first, InputIterator last, UnaryPredicate pred)
@@ -58,120 +31,82 @@ find_if_maison (InputIterator first, InputIterator last, UnaryPredicate pred)
 
 template<class InputIterator, class UnaryPredicate>
 typename std::enable_if <
-                            !is_introspectable<UnaryPredicate>::value,
+                            !is_not_lamba_template<UnaryPredicate>::value,
                             InputIterator
                         >::type
 find_if_maison (InputIterator first, InputIterator last, UnaryPredicate pred)
 {
-    std::cout << "Version sans verification" << std::endl;
+    // http://en.cppreference.com/w/cpp/types/is_callable
+    // static_assert(std::is_callable<UnaryPredicate,typename InputIterator::value_type>::value, "test"); // c++17
     return std::find_if(first,last,pred);
 }
 
-template <class T>
-bool foo (T a) { (void)a; return true;}
 
-int test2 () { return 1 ;}
-bool ok (){ return true;}
 
 template <class T>
-bool isIntro (T a)
+bool isNotLambdaTemplate (T a)
 {
-     using namespace std;
-    cout << boolalpha ;
-    cout << is_introspectable<T>::value << endl;
+    (void) a;
+    return is_not_lamba_template<T>::value;
 }
 
-struct mem_test {
-    bool test(int a, int d) { (void) a; return true ; }
-    bool operator()(){return false;}
-};
+template <class T>
+bool isNotLambdaTemplate ()
+{
+    return is_not_lamba_template<T>::value;
+}
+
+template<class T>
+bool foo (const T& t){(void)t; return true;}
+
 int main()
 {
-    isIntro([](int a ){});
-    isIntro([](auto a ){});
+    auto lambda_test = [](int s){(void)s; return true;};
+    static_assert ( std::is_same<bool, decltype(typeRetour(lambda_test))>::value , "" );
+    static_assert (std::is_same<bool,decltype(getInformationParam(lambda_test))::type::result_type>::value , "" );
 
     using namespace std;
     cout << boolalpha ;
-    cout << has_operator_parenthese<int>::value << endl;
-    cout << has_operator_parenthese<mem_test>::value << endl;
+    cout << "[](int a ){}  : "  <<  isNotLambdaTemplate([](int a ){ (void) a ;}) << endl;
+    cout << "[](auto a ){}  : " <<  isNotLambdaTemplate([](auto a ){ (void) a ;}) << endl;;
+    cout << "int  : "           <<  isNotLambdaTemplate(1) << endl;;
 
-    std::vector<int> test =  { 1 ,2 ,3 , 4 };
-  //  auto it = find_if_maison(test.begin(), test.end() ,[](int s){(void)s; return true;} );
-   //auto test3 = std::find_if(test.begin(), test.end(), 5);
-   //auto test4 = find_if_maison(test.begin(), test.end() ,5 );
+    struct structVide {};
 
-  //  auto test5 = find_if_maison(test.begin(), test.end() ,[](int x) { return foo(x); });
-    //auto test6 = find_if(test.begin(), test.end() ,foo<int> );
+    struct structParenthese {
+        bool operator()(int a){(void) a; return true;}
+    };
 
-    auto test6 = find_if(test.begin(), test.end() ,[](auto s){(void)s; return true;} );
-   auto test7 = find_if_maison(test.begin(), test.end() ,[](auto s){(void)s; return true;} );
-    exit(5);
-    /*cout << nbParam(test2) << endl;
+    cout << "structParenthese  : " <<  isNotLambdaTemplate<structParenthese>() << endl; ;
+    cout << "structVide  : " <<  isNotLambdaTemplate<structVide>() << endl;;
 
-    cout << typeid(can_be_checked<int>::type).name() << endl;
-    cout << typeid(can_be_checked<decltype(test2)>::type).name() << endl;
-    auto a = [](auto d) { return true ; };
-
-    auto b = [](int s){(void)s; return true;};
-    cout << typeid(can_be_checked<decltype(a)>::type).name() << endl;
-    cout << typeid(can_be_checked<decltype(b)>::type).name() << endl;*/
-    /*std::vector<int> vec =  { 1 ,2 ,3 , 4 };
-
-
-
-
-   cout << enable_if_ope_parentese<int>::value2 << endl;
-    cout << enable_if_ope_parentese<mem_test>::value2 << endl;
-    std::cout << typeid(decltype(&mem_test::operator())).name() << std::endl;
-    std::cout << typeid(decltype(&mem_test::operator())).name() << std::endl;
-
-    //auto test7 = find_if_maison(vec.begin(), vec.end() ,[](auto s){(void)s; return true;} );
-    auto test7 = find_if_maison(vec.begin(), vec.end() ,[](int s){(void)s; return true;} );*/
-//    cout << nbParam(mem_fun(&mem_test::test) ) << endl;
-
-    /*
-    cout << nbParam(&mem_test::test) << endl;
     std::vector<int> vec =  { 1 ,2 ,3 , 4 };
-    auto test = find_if_maison(vec.begin(), vec.end() ,&mem_test::test );*/
-    //cout << "fail "<< nbParam() << endl;*/
+    auto lambda = [](int s){(void)s; return true;};
+    find_if_maison  (vec.begin(), vec.end() ,lambda);
+    find_if         (vec.begin(), vec.end() ,lambda);
+
+    find_if(vec.begin(), vec.end() ,        foo<int> );
+    find_if_maison(vec.begin(), vec.end() , foo<int> );
 
 
-/*
-    std::vector<int> test =  { 1 ,2 ,3 , 4 };
-  //  auto it = find_if_maison(test.begin(), test.end() ,[](int s){(void)s; return true;} );
-   //auto test3 = std::find_if(test.begin(), test.end(), 5);
-   //auto test4 = find_if_maison(test.begin(), test.end() ,5 );
+    find_if(vec.begin(), vec.end() ,            [](auto s){(void)s; return true;} );
+    find_if_maison(vec.begin(), vec.end() ,     [](auto s){(void)s; return true;} );
 
-    auto test5 = find_if_maison(test.begin(), test.end() ,[](int x) { return foo(x); });
-    //auto test6 = find_if(test.begin(), test.end() ,foo<int> );
+    structParenthese test;
+    find_if(vec.begin(), vec.end() ,        test );
+    find_if_maison(vec.begin(), vec.end() , test );
 
-    //auto test6 = find_if(test.begin(), test.end() ,[](auto s){(void)s; return true;} );
-    //auto test7 = find_if_maison(test.begin(), test.end() ,[](auto s){(void)s; return true;} );
-    cout << *it << endl;
+    //find_if(vec.begin(), vec.end(),          5);
+    //find_if_maison(vec.begin(), vec.end() ,  5);
 
+    //find_if(vec.begin(), vec.end() ,        [](string s){(void)s; return true;} );
+    //find_if_maison(vec.begin(), vec.end() , [](string s){(void)s; return true;} );
 
+    //find_if(vec.begin(), vec.end() ,        [](int s){(void)s; return 5;} );
+    //find_if_maison(vec.begin(), vec.end() , [](int s){(void)s; return 5;} );
 
-    cout << typeid(decltype(typeParam<0>(mem_fun(&string::length)))).name() << endl;
-    cout << typeid(decltype(typeRetour(mem_fun(&string::length)))).name() << endl;
-    cout << "ici" << nbParam(mem_fun(&string::length)) << endl;
-    Bidon b;
-    for (auto& elem : b) {
-        std::cout << elem << std::endl;
-    }
-
-
-    //auto monIterateurBegin =  FoncteurIterator<std::vector<std::reference_wrapper<int>>::iterator,decltype(maLambda)>(b.vec.begin(),maLambda);
-
-    auto maLambda = [] (const std::reference_wrapper<int>& refWrap ) { return refWrap.get(); };
-    //auto maLambda = [] ( auto refWrap ) { return refWrap.get(); };
-
-//    cout << typeid(decltype(can_be_checked<int>()).name() << endl;
-    /*cout << nbParam(maLambda) <<endl;
-    cout << typeid(const std::reference_wrapper<int>&).name() << endl;
-    cout << typeid(decltype(typeParam<0>(maLambda))).name() << endl;
-    cout << typeid(int).name() << endl;
-    cout << typeid(decltype(typeRetour(maLambda))).name() << endl;*/
-    can_be_checked<int>::type testqsdf;
+    //find_if(vec.begin(), vec.end() ,        [](int s, int b){(void)s; return false;} );
+    //find_if_maison(vec.begin(), vec.end() , [](int s, int b){(void)s; return false;} );
 
     return 0;
 }

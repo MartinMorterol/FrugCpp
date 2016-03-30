@@ -7,6 +7,7 @@
 #include <typeinfo>
 #include <algorithm>
 #include <functional>
+#include <type_traits>
 #include "can_be_check.hpp"
 #include "type_traits.hpp"
 
@@ -15,8 +16,15 @@ class ERREUR;
 
 template <class T>
 struct informationParam{
-    struct LeParamNestPasUneFonction {};
-    ERREUR<LeParamNestPasUneFonction> erreur;
+    struct IsNotACallable {};
+    ERREUR<T,IsNotACallable> erreur;
+
+    /*
+    static_assert(
+                   std::is_same < T, typename void_if_valide<T>::type >::value &&false
+                  ,
+                  "L'argument template n'est pas callable"
+                  );*/
 };
 
 
@@ -96,14 +104,10 @@ informationParam<T> getInformationParam (T t);
 template<class T>
 constexpr size_t nbParam(T fonction)
 {
-    // si ça plante ici c'est que ta classe elle a pas d'operateur () , noob
-    // ou que c'est une méthode template / surcharger
     return decltype(getInformationParam(fonction))::type::arity;
 }
 template<class T> constexpr size_t nbParam()
 {
-    // si ça plante ici c'est que ta classe elle a pas d'operateur () , noob
-    // ou que c'est une méthode template / surcharger
     return decltype(getInformationParam(std::declval<T>()))::type::arity;
 }
 

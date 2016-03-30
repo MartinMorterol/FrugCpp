@@ -18,6 +18,9 @@ struct is_container<   T,
                 typename void_if_valide<decltype(std::declval<T>().end())>::type
             >  : std::true_type {};
 
+
+
+
 template <class T, class U = void>
 struct is_string : std::false_type {};
 
@@ -50,9 +53,33 @@ std::ostream& operator<< (std::ostream& out, const T& container)
     return out;
 }
 
+template < class T>
+void foo (T&& t) {
+    foo(std::forward<T>(t), is_container<T> ());
+   //  foo(t, is_container<T> ());
+   
+}
+
+template < class T>
+// void foo  ( T& t , std::true_type default = std::true_type()  ) ??
+void foo  (T&& t , std::true_type  )
+{
+    (void)t;
+    std::cout<<"je match les conteneurs"<<std::endl;
+}
+template < class T>
+void foo  (T&& t , std::false_type   )
+{
+    (void)t;
+    std::cout<<"je match pas les conteneurs"<<std::endl;
+}
 int main() {
     using namespace std;
     std::vector<int> vec = { 1 ,1 ,2, 3, 5 };
+    auto init = { 1 ,1 ,2, 3, 5 , 8 };
     cout << vec << endl;
+    cout << init << endl;
+    foo(vec);
+    foo(1);
 }
  
