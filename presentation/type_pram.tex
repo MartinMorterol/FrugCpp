@@ -27,7 +27,7 @@
 
 
 \title{Déduction des types des paramètres}
-\author{Martin~Morterol}
+\author{Martin~\textsc{Morterol}}
 \date{\today}
 
 
@@ -43,15 +43,15 @@
 	Cas d'utilisations : 
 	\begin{itemize}
 		\item Le premier est celui annoncé dans le résumé du talk.
-		\item[] Stocker une fonction passée en tant que template dans une \lstinline{std::function}.
+		\item[] Stocker une fonction passée en tant que \lstinline{template} dans une \lstinline{std::function}.
 		\item Le deuxième est faire un message d'erreur propre lors d'un mauvais passage de fonction.
 	\end{itemize}
 \end{frame}
 \begin{frame}
 	Contexte : Un petit jeu en 2D.
     \begin{itemize}
-    	\item Une carte est un conteneur (comme vector, map...).
-    	\item On peut donc l'utiliser dans un for range.
+    	\item Une carte est un conteneur (comme \lstinline{vector}, \lstinline{map}...).
+    	\item On peut donc l'utiliser dans un \emph{rang-based for loop}.
     \end{itemize}
     Problème : 
     \begin{itemize}
@@ -60,20 +60,20 @@
     	\item Je n'ai pas envie d’écrire .get() à chaque fois. 
     	\item J'ai envie de me faire plaisir ça sert à ça les projets perso :)
     \end{itemize}
-    Solution : Je crée mon iterateur maison que j'appelle FoncteurIterator.
+    Solution : Je crée mon iterateur maison que j'appelle \lstinline{FoncteurIterator}.
   
     
 \end{frame}
 \begin{frame}[containsverbatim]
 
-	Exemple : \href{run:../code_demo/iterator.cpp}{iterator.cpp}		
-		
+	Exemple : \href{run:../code_demo/iterator.cpp}{iterator.cpp}	\\
+    Exemple : \href{run:../code/src/iterateurFoncteur.hpp}{iterateurFoncteur.hpp}
 \end{frame}
 \begin{frame}[containsverbatim]
 	Problème : 
 	\begin{itemize}
 		\item Pour utiliser un \lstinline{std::function<>} J'ai besoin du type de retour du foncteur et du type du paramètre. 
-		\item Je ne voulais pas juste utiliser "FoncteurTemplate foncteur" (bien que ça soit le seule solution valide en C++14) pour me forcer à utiliser des choses que je ne connaissait pas.
+		\item Je ne voulais pas juste utiliser "FoncteurTemplate foncteur" (bien que ça soit la seule solution valide en C++14) pour me forcer à utiliser des choses que je ne connaissais pas.
 	\end{itemize}
 	Solution :
 	\begin{itemize}
@@ -82,7 +82,7 @@
 FoncteurIterator< IteratorTemplates,
     FoncteurTemplate,typeRetour, typeParam>
 	\end{lstlisting}		
-		\item Trouver un moyen de déduire typeRetour et typeParam directement de FoncteurTemplate. 
+		\item Trouver un moyen de déduire \lstinline{typeRetour} et \lstinline{typeParam} directement de \lstinline{FoncteurTemplate}. 
 	\end{itemize}
 \end{frame}
 
@@ -100,7 +100,7 @@ FoncteurIterator< IteratorTemplates,
 		\item Trouver un moyen de faire de \lstinline{static_assert} sur le type de retour et les paramètres. 
 	\end{itemize}
 	
-	Les messages, dans ce cas, ne sont pas horrible mais l’amélioration des messages d'erreur est toujours un plus, surtout en méta-programmation.
+	Les messages, dans ce cas, ne sont pas horribles mais l’amélioration des messages d'erreur est toujours un plus, surtout en méta-programmation.
 \end{frame}
 
 \section{Prérequis}
@@ -111,7 +111,7 @@ FoncteurIterator< IteratorTemplates,
 \subsection{La spécialisation}
 
 \begin{frame}[containsverbatim]
-	La spécialisation (partielle ou non) est le fait de, pour une structure, spécifier une partie (ou tous) des types. Dans se cas le compilateur choisir la structure la plus spécialiser.\\
+	La spécialisation (partielle ou non) est le fait de, pour une structure, spécifier une partie (ou tous) des types. Dans ce cas le compilateur choisir la structure la plus spécialisé.\\
 	
 	\begin{lstlisting}
 template< class T > struct is_pointer_helper    
@@ -122,8 +122,26 @@ template< class T > struct is_pointer_helper<T*>
 	source du code : \href{http://en.cppreference.com/w/cpp/types/is_pointer}{cppreference}
 \end{frame}
 
-\begin{frame}[containsverbatim]
-	Si la structure à des types par défaut ils sont déduits avant de regarder quelle structure est la plus spécialisée.
+\begin{frame}[fragile]
+	Si la structure a des types par défaut ils sont déduits avant de regarder quelle structure est la plus spécialisée.
+\begin{onlyenv}<1>
+	\begin{lstlisting}
+template <class T, class U = int >
+struct demo { constexpr static int value = 0 ;};
+
+template<class T>
+struct demo <T,int> {constexpr static int value = 1;};
+
+template<class T>
+struct demo <T,void> {constexpr static int value = 2;};
+
+cout << demo<std::string>::value << endl;     // 
+cout << demo<int,int>::value << endl;         // 
+cout << demo<int,void>::value << endl;        // 
+cout << demo<int,std::string>::value << endl; // 
+	\end{lstlisting}
+\end{onlyenv}
+\begin{onlyenv}<2>
 	\begin{lstlisting}
 template <class T, class U = int >
 struct demo { constexpr static int value = 0 ;};
@@ -139,6 +157,7 @@ cout << demo<int,int>::value << endl;         // 1
 cout << demo<int,void>::value << endl;        // 2
 cout << demo<int,std::string>::value << endl; // 0
 	\end{lstlisting}
+\end{onlyenv}
 	
 \end{frame}
 
@@ -146,10 +165,10 @@ cout << demo<int,std::string>::value << endl; // 0
 \begin{frame}[containsverbatim]
 
 	\begin{itemize}
-		\item Substitution failure is not an error : Si on arrive pas à résoudre la déclaration, on l'ignore.
+		\item \emph{Substitution failure is not an error} : Si on arrive pas à résoudre la déclaration, on l'ignore.
 		\begin{itemize}
-			\item Pour les structures : Dans les type template et les types de spécialisation.
-			\item Pour les fonctions : Dans les types template, les arguments, et le type de retour.
+			\item Pour les structures : Dans les type \lstinline{template} et les types de spécialisation.
+			\item Pour les fonctions : Dans les types \lstinline{template}, les arguments, et le type de retour.
 		\end{itemize}
 		\item Exemple : \href{run:../code_demo/sfinae.cpp}{sfinae.cpp}
 	\end{itemize}
@@ -160,7 +179,7 @@ cout << demo<int,std::string>::value << endl; // 0
 \subsection{Outils utiles}
 
 \begin{frame}[containsverbatim]
-decltype : permet de retourner le type d'une expression, ça saute pas forcement au yeux comme ça, mais c'est génial.
+\lstinline{decltype} : permet de retourner le type d'une expression, ça saute pas forcement au yeux comme ça, mais c'est génial!
 
 \begin{lstlisting}
 	int a = 4 ;
@@ -177,7 +196,7 @@ decltype : permet de retourner le type d'une expression, ça saute pas forcement
 \end{frame}
 
 \begin{frame}[containsverbatim]
-\lstinline{std::declval} : répond au problème suivant : Si on veut connaître le type de retour d'un méthode donc doit faire un decltype sur l'appel de la méthode. Mais comment faire lorsque le type n'est pas default constructible ? 
+\lstinline{std::declval} : répond au problème suivant : Si on veut connaître le type de retour d'un méthode donc doit faire un \lstinline{decltype} sur l'appel de la méthode. Mais comment faire lorsque le type n'est pas \emph{default constructible} ? 
 	\begin{lstlisting}
 class W = decltype(T().end())// marche si T() est valide
 class W = decltype(std::declval<T>().end()) // marche.
@@ -185,11 +204,11 @@ class W = decltype(std::declval<T>().end()) // marche.
 	
 \lstinline{std::enbale_if} : \lstinline{enable_if<false>::type} n'existe pas et \lstinline{std::enable_if<true>::type} existe. \lstinline{enbale_if} prend un deuxième argument optionnel qui donne le type de "\lstinline{::type}", par défaut il vaut void.
 \\ 
-\lstinline{std::is_same} : \lstinline{is_same<T,U>::value} vaut vrais si T==U et faux si non.
+\lstinline{std::is_same} : \lstinline{is_same<T,U>::value} vaut vrai si T==U et faux sinon.
 
 \end{frame}
 
-\subsection{Ecrire un type\_trait}
+\subsection{Écrire un type\_trait}
 \begin{frame}[containsverbatim]
 \begin{itemize}
 	\item Hériter de \lstinline{std::true_type} ou \lstinline{std::false_type} nous permet de déclarer rapidement un \lstinline{constexpr static bool value=true/false;}
@@ -202,8 +221,8 @@ Exemple : \href{run:../code_demo/traits.cpp}{traits.cpp}\\
 \end{frame}
 
 \subsection{Remarques}
-\begin{frame}[containsverbatim]
-	Ce code ne marche pas : error: redefinition of template<class T, class U> void foo(const T\&)
+\begin{frame}[fragile]
+	Ce code ne marche pas : \only<1>{\\Pourquoi ?}\only<2>{\\\lstinline{error: redefinition of template<class T, class U> void foo(const T\&)}}
 	\begin{lstlisting}
 template< class T,
           class U = typename std::enable_if
@@ -231,7 +250,7 @@ void foo (const T& t) {
 template< class T, 
           class U =  typename std::enable_if
                      < !is_container<T>::value>::type,
-          class V = void >
+          class V = void > // <-- +1 ligne par surcharge
 void foo (const T& t) {
     std::cout<<"je match pas les conteneurs"<<std::endl;
 }
@@ -243,6 +262,7 @@ void foo (const T& t) {
 template< class T >
 typename std::enable_if< 
         is_container<T>::value, void  >::type
+//        Le vrais type est la --^^         
 foo (const T& t) {
     std::cout <<"je match les conteneurs"<< std::endl;
 }
@@ -297,7 +317,7 @@ void foo (T&& t) {
 
 \begin{frame}[containsverbatim]
 	\frametitle{Fonction d'aide}
-	On peut utiliser simplifier l’écriture du code utilisateur que ça soit au niveau du type de retour ou grâce à la déduction automatique du type.
+	On peut simplifier l’écriture du code utilisateur au niveau du type de retour ou grâce à la déduction automatique du type.
 	\begin{lstlisting}
 decltype(typeRetour(lambda))
 vs
@@ -306,7 +326,7 @@ decltype(getInformationParam(lambda))::type::
 vs
 type_result<decltype(lambda_test)> 
 	\end{lstlisting}
-Le dernier utilise \texttt{c++14} et les usings template, c'est sans doute le plus simple lorsqu'un utilise une classe "callable".
+Le dernier utilise \texttt{C++14} et les \texttt{usings template}, c'est sans doute le plus simple lorsqu'un utilise une classe "callable".
 	\begin{lstlisting}
 decltype(typeRetour<structParenthese>())
 vs
@@ -371,10 +391,10 @@ vs
 template <class T>
 struct informationParam{
     static_assert(
-         std::is_same < T, typename void_if_valide<T>
-                                ::type >::value &&false,
+         std::is_same<T,T>::value &&false,
                "L'argument template n'est pas callable"
-              );};
+              );
+};
 
 \end{lstlisting}
 \end{frame}

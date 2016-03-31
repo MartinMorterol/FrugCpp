@@ -53,15 +53,6 @@ std::ostream& operator<< (std::ostream& out, const T& container)
     return out;
 }
 
-template < class T>
-void foo (const T&, typename std::enable_if<is_container<T>::value>::type* = nullptr) {
-   std::cout <<"je match les conteneurs"<< std::endl;
-}
-
-template < class T>
-void foo (const T&, typename std::enable_if<!is_container<T>::value>::type* = nullptr) {
-   std::cout <<"je match pas les conteneurs"<< std::endl;
-}
 
 int main() {
     using namespace std;
@@ -69,7 +60,5 @@ int main() {
     auto init = { 1 ,1 ,2, 3, 5 , 8 };
     cout << vec << endl;
     cout << init << endl;
-    foo(vec);
-    foo(1);
 }
  

@@ -18,10 +18,10 @@ template <class T>
 struct informationParam{
     struct IsNotACallable {};
     ERREUR<T,IsNotACallable> erreur;
+/*
 
-    /*
     static_assert(
-                   std::is_same < T, typename void_if_valide<T>::type >::value &&false
+                   std::is_same < T, T >::value &&false
                   ,
                   "L'argument template n'est pas callable"
                   );*/
@@ -86,6 +86,7 @@ informationParam<T> getInformationParam (T t);
 
     nbParam(x); // utile pour les lambda et les pointeurs de fonction
     nbParam<X>();//utile pour les classes foncteurs
+    +using
 
 **/
 template<class T>

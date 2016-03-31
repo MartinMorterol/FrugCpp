@@ -18,8 +18,8 @@ struct Bidon {
     }
 
     // Le parcourt des cases
-    using iterator = FoncteurIterator<std::vector<std::reference_wrapper<int>>::iterator,std::UnWrappe<int>>;
-    using const_iterator = FoncteurIterator<std::vector<std::reference_wrapper<int>>::const_iterator,std::UnWrappe<int>>;
+    using iterator = FoncteurIterator<std::vector<std::reference_wrapper<int>>::iterator,UnWrappe<int>>;
+    using const_iterator = FoncteurIterator<std::vector<std::reference_wrapper<int>>::const_iterator,UnWrappe<int>>;
 
     inline iterator begin()                     { return iterator(vec.begin());         }
     inline const_iterator begin() const         { return const_iterator(vec.begin());   }

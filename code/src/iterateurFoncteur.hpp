@@ -5,14 +5,15 @@
 #include "paramInfo.hpp"
 
 
-namespace std {
-    template<class T>
-    struct UnWrappe
-    {
-        typedef T value_type;
-        T& operator()(std::reference_wrapper<T> refWrap ) const { return refWrap.get(); }
-    };
 
+template<class T>
+struct UnWrappe
+{
+    typedef T value_type;
+    T& operator()(std::reference_wrapper<T> refWrap ) const { return refWrap.get(); }
+};
+
+namespace std {
     template<class T>
     bool operator==(std::reference_wrapper<T> un, std::reference_wrapper<T> deux)
     {
@@ -47,6 +48,7 @@ class FoncteurIterator
         using typeDuParam  = decltype(typeParam<0>(std::declval<FoncteurTemplate>()));
 
         IteratorTemplate iterateur;
+        // FoncteurTemplate foncteur;
         std::function<typeDeRetour(typeDuParam)> foncteur;
 
 

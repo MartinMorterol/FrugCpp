@@ -37,11 +37,12 @@ int main() {
     fonction_sfinae(vector<int>());
     fonction_sfinae(booclass ());
     fonction_sfinae(bibiclass ());
-    /*fonction_sfinae(drame ());
+    //fonction_sfinae(drame ());
+    /*
     |39|error: call of overloaded ‘fonction_sfinae(drame)’ is ambiguous|
     |39|note: candidates are:|
     |12|note: void fonction_sfinae(T, typename T::bibi) [with T = drame; typename T::bibi = int]|
-    |17|note: void fonction_sfinae(T) [with T = drame; U = int]|*//*
-    // fonction_sfinae(5); |44|error: no matching function for call to ‘fonction_sfinae(int)’|*/
+    |17|note: void fonction_sfinae(T) [with T = drame; U = int]|*/
+    // fonction_sfinae(5); //|44|error: no matching function for call to ‘fonction_sfinae(int)’|*/
 }
 
