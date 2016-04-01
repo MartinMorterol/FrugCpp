@@ -113,8 +113,8 @@ int main()
     //find_if(vec.begin(), vec.end() ,        [](int ){ return structParenthese();} );
     //find_if_maison(vec.begin(), vec.end() , [](int ){ return structParenthese();} );
 
-    //find_if(vec.begin(), vec.end() ,        [](int , int ){ return false;} );
-//    find_if_maison(vec.begin(), vec.end() , [](int , int ){ return false;} );
+//    find_if(vec.begin(), vec.end() ,        [](int , int ){ return false;} );
+    find_if_maison(vec.begin(), vec.end() , [](int , int ){ return false;} );
 
     return 0;
 }
