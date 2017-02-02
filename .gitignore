@@ -1,0 +1,14 @@
+**/*.cbp
+**/*.depend
+**/*.layout
+**/bin/*
+**/build/*
+**/obj/*
+**/*.aux
+**/*.log
+**/*.nav
+**/*.out
+**/*.snm
+**/*.gz
+**/*.toc
+**/*~
