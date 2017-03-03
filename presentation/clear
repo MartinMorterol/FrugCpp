@@ -1,2 +1,2 @@
-rm *.aux *.log *.toc *.nav *.out *.snm *.synctex.gz *~
+rm *.aux *.log *.toc *.nav *.out *.snm *.synctex.gz *~ *.vrb
 
