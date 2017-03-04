@@ -1,0 +1,3 @@
+[submodule "conteneur/code/src/lib"]
+	path = conteneur/code/src/lib
+	url = git@bitbucket.org:MartinMorterol/lib.git
