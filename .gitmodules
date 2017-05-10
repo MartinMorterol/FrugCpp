@@ -1,0 +1,6 @@
+[submodule "bench_conteneur/code/lib"]
+	path = bench_conteneur/code/lib
+	url = git@bitbucket.org:MartinMorterol/lib.git
+[submodule "bench_conteneur/code/src/lib"]
+	path = bench_conteneur/code/src/lib
+	url = git@bitbucket.org:MartinMorterol/lib.git

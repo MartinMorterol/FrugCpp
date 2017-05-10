@@ -12,3 +12,6 @@
 **/*.gz
 **/*.toc
 **/*~
+**/data
+**/exe
+**/gnu_plot_data
