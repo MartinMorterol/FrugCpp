@@ -13,7 +13,7 @@ using std::vector;
 #include <iterator>
 #include <algorithm>
 
-
+#include <array>
 
 #include "lib/fonction_string.hpp"
 #include "lib/convertion.hpp"
@@ -60,16 +60,18 @@ void insert ( size_t taille, const std::vector<size_t>& values)
 }
 
 
-
+constexpr auto stupide (int i) //  even_tuple_t<T...>
+{
+	return i;
+}
 int main()
 {
-	
-
 
 	std::vector<size_t> val;
 	const constexpr size_t max = 10000000;
 	for (size_t i = 0 ; i < max ; ++i) { val.push_back(i); }
 
+	
 	auto plot = make_graphe("basique !",insert<std::vector<size_t>>,
 							"back",insert<std::vector<size_t>,std::back_insert_iterator>);
 	for (size_t i = 10 ; i < max ; i*= 10 )
@@ -78,5 +80,4 @@ int main()
 	}
 	
 	plot.generate_file("data","set logscale y","set key left top");
-
 }
