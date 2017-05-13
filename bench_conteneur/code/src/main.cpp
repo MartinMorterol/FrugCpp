@@ -19,13 +19,15 @@ using std::vector;
 #include "lib/convertion.hpp"
 #include "lib/bench.hpp"
 #include "lib/plot.hpp"
+#include "lib/outils.hpp"
 using namespace libRabbit;
 
 #include "lib/tuple.hpp"
 
 #include <list>
 #include <set>
-
+#include <unordered_map>
+#include <unordered_set>
 #include <boost/core/demangle.hpp>
 
 
@@ -59,25 +61,59 @@ void insert ( size_t taille, const std::vector<size_t>& values)
 	}
 }
 
-
-constexpr auto stupide (int i) //  even_tuple_t<T...>
+template<class T >
+void insert_map( size_t taille, const std::vector<size_t>& values)
 {
-	return i;
+	T conteneur;
+	decltype(taille) i = 0;
+	for (const auto& v : values)
+	{
+		conteneur[i] = v;
+		++i;
+		if ( i >= taille) break;
+	}
 }
-int main()
-{
 
-	std::vector<size_t> val;
-	const constexpr size_t max = 10000000;
+
+
+std::vector<size_t> generate_lineaire (size_t max) {
+    std::vector<size_t> val;
 	for (size_t i = 0 ; i < max ; ++i) { val.push_back(i); }
+	return val;
+}
 
-	
-	auto plot = make_graphe("basique !",insert<std::vector<size_t>>,
-							"back",insert<std::vector<size_t>,std::back_insert_iterator>);
+std::vector<size_t> generate_random (size_t max) {
+    std::vector<size_t> val;
+	for (size_t i = 0 ; i < max ; ++i) { val.push_back(random(size_t(0),max)); }
+	return val;
+}
+
+template <int max, class T>
+void run_bench_insert (std::string nom, T generator)
+{
+    std::vector<size_t> val = generator(max);
+		
+	auto plot = make_graphe("vector back",insert<std::vector<size_t>,std::back_insert_iterator>,
+                            "vector ",insert<std::vector<size_t>>,
+							"list back",insert<std::list<size_t>,std::back_insert_iterator>,
+                            "list ",insert<std::list<size_t>>,
+                            "unordered_set", insert<std::unordered_set<size_t>>,
+                            "set ",insert<std::set<size_t>>,
+                            "unordered map", insert_map<std::unordered_map<size_t,size_t>>,
+                            "map", insert_map<std::map<size_t,size_t>>);
 	for (size_t i = 10 ; i < max ; i*= 10 )
 	{
 		plot.run(i,i,val);
 	}
 	
-	plot.generate_file("data","set logscale y","set key left top");
+	plot.generate_file("insertion_"+nom,"set logscale y","set key left top");
+    
+}
+int main()
+{
+
+    run_bench_insert<10000000>("lineaire",generate_lineaire);
+    run_bench_insert<10000000>("random",generate_random);
+
+	
 }
