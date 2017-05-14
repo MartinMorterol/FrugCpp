@@ -7,11 +7,7 @@ using std::endl;
 #include <vector>
 #include <string>
 using std::vector;
-#include <vector>
-#include <list>
-#include <iostream>
-#include <iterator>
-#include <algorithm>
+
 
 #include <array>
 
@@ -23,97 +19,86 @@ using std::vector;
 using namespace libRabbit;
 
 #include "lib/tuple.hpp"
-
+#include "insertion_bench.hpp"
+#include "outil_bench.hpp"
+#include <boost/core/demangle.hpp>
 #include <list>
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
-#include <boost/core/demangle.hpp>
+#include <array>
+#include <vector>
+#include <list>
+#include <iostream>
+#include <iterator>
+#include <algorithm>
 
-
-template<class T,template <class> class Insert >
-void insert ( size_t taille, const std::vector<size_t>& values)
+template<class	T>
+void charger_data (T& conteneur, decltype(generate_lineaire(1))& data)
 {
-	T conteneur;
-	Insert<T> ins_it(conteneur);
-	decltype(taille) i = 0;
-	for (const auto& v : values)
+	std::copy(data.begin(), data.end(), std::inserter(conteneur,conteneur.begin()));
+}
+
+template<>
+void charger_data<std::map<size_t,size_t>> (std::map<size_t,size_t>& conteneur, decltype(generate_lineaire(1))& data)
+{
+	for (auto i : data) { conteneur[i] = i ;}
+}
+template <class T>
+void read(const T& conteneur, size_t taille)
+{
+	for (size_t i = 0 ; i < std::min(taille,conteneur.size()) ; ++i )
 	{
-		ins_it = v; 
-		++ins_it;
-		++i;
-		if ( i >= taille) break;
+		auto result = conteneur[i];
+		(void) result;
 	}
 }
 
-template<class T >
-void insert ( size_t taille, const std::vector<size_t>& values)
+template <int max>
+void run_bench_read (std::string nom)
 {
-	T conteneur;
-	std::insert_iterator<T> ins_it(conteneur, conteneur.begin());
-	decltype(taille) i = 0;
-	for (const auto& v : values)
-	{
-		ins_it = v; 
-		++ins_it;
-		++i;
-		if ( i >= taille) break;
-	}
-}
+	auto data = generate_lineaire(10000000);
+	std::vector<size_t> vec;
+	std::list<size_t> list;
 
-template<class T >
-void insert_map( size_t taille, const std::vector<size_t>& values)
-{
-	T conteneur;
-	decltype(taille) i = 0;
-	for (const auto& v : values)
-	{
-		conteneur[i] = v;
-		++i;
-		if ( i >= taille) break;
-	}
-}
+	charger_data(vec,data);
+	charger_data(list,data);
 
-
-
-std::vector<size_t> generate_lineaire (size_t max) {
-    std::vector<size_t> val;
-	for (size_t i = 0 ; i < max ; ++i) { val.push_back(i); }
-	return val;
-}
-
-std::vector<size_t> generate_random (size_t max) {
-    std::vector<size_t> val;
-	for (size_t i = 0 ; i < max ; ++i) { val.push_back(random(size_t(0),max)); }
-	return val;
-}
-
-template <int max, class T>
-void run_bench_insert (std::string nom, T generator)
-{
-    std::vector<size_t> val = generator(max);
-		
-	auto plot = make_graphe("vector back",insert<std::vector<size_t>,std::back_insert_iterator>,
-                            "vector ",insert<std::vector<size_t>>,
-							"list back",insert<std::list<size_t>,std::back_insert_iterator>,
-                            "list ",insert<std::list<size_t>>,
-                            "unordered_set", insert<std::unordered_set<size_t>>,
-                            "set ",insert<std::set<size_t>>,
-                            "unordered map", insert_map<std::unordered_map<size_t,size_t>>,
-                            "map", insert_map<std::map<size_t,size_t>>);
+	/*auto plot = make_graphe("vector",	[&](size_t taille) { read(vec,taille); } ,
+							"list",		[&](size_t taille) { read(list,taille); });
 	for (size_t i = 10 ; i < max ; i*= 10 )
 	{
-		plot.run(i,i,val);
+		plot.run(i,i);
 	}
-	
-	plot.generate_file("insertion_"+nom,"set logscale y","set key left top");
-    
+
+	plot.generate_file("insertion_"+nom,"set logscale y","set key left top");*/
 }
+
+template < size_t... I, class T, class Add >
+auto test_impl(std::index_sequence<I...>, T&& tuple, Add&& a) {
+	return std::make_tuple(std::get<I>(tuple)...,std::forward<Add>(a));
+}
+
+
+template<class T, class Add>
+auto test (T&& tuple, Add&& a)
+{
+	return test_impl(get_indexes(tuple), std::forward<T>(tuple) , std::forward<Add>(a) );
+}
+
 int main()
 {
-
-    run_bench_insert<10000000>("lineaire",generate_lineaire);
-    run_bench_insert<10000000>("random",generate_random);
+	std::vector<size_t> vec;
+	std::list<size_t> list;
+	auto tuple1 = std::make_tuple([&](size_t taille) { read(vec,taille);});
+	auto tuple = test (tuple1,[&](size_t taille) { read(vec,taille); }) ;
+	//display_tuple(tuple);
+	std::get<0>(tuple)(5);
+	std::get<1>(tuple)(5);
+	constexpr size_t max = 10000000;
+	run_bench_read<max> ("lecture");
+	/*run_bench_insert<10000000>("lineaire",generate_lineaire);
+	run_bench_insert<10000000>("random",generate_random);*/
 
 	
 }
