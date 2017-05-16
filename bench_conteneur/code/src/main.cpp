@@ -64,37 +64,20 @@ void run_bench_read (std::string nom)
 	charger_data(vec,data);
 	charger_data(list,data);
 
-	/*auto plot = make_graphe("vector",	[&](size_t taille) { read(vec,taille); } ,
-							"list",		[&](size_t taille) { read(list,taille); });
+	auto plot = make_graphe("vector",	[&](size_t taille) { read(vec,taille); }); //,"list",		[&](size_t taille) { read(list,taille); });
 	for (size_t i = 10 ; i < max ; i*= 10 )
 	{
 		plot.run(i,i);
 	}
 
-	plot.generate_file("insertion_"+nom,"set logscale y","set key left top");*/
+	plot.generate_file("insertion_"+nom,"set logscale y","set key left top");
 }
 
-template < size_t... I, class T, class Add >
-auto test_impl(std::index_sequence<I...>, T&& tuple, Add&& a) {
-	return std::make_tuple(std::get<I>(tuple)...,std::forward<Add>(a));
-}
-
-
-template<class T, class Add>
-auto test (T&& tuple, Add&& a)
-{
-	return test_impl(get_indexes(tuple), std::forward<T>(tuple) , std::forward<Add>(a) );
-}
 
 int main()
 {
-	std::vector<size_t> vec;
-	std::list<size_t> list;
-	auto tuple1 = std::make_tuple([&](size_t taille) { read(vec,taille);});
-	auto tuple = test (tuple1,[&](size_t taille) { read(vec,taille); }) ;
-	//display_tuple(tuple);
-	std::get<0>(tuple)(5);
-	std::get<1>(tuple)(5);
+
+
 	constexpr size_t max = 10000000;
 	run_bench_read<max> ("lecture");
 	/*run_bench_insert<10000000>("lineaire",generate_lineaire);
