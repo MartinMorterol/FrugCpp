@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 2.6)
 # General C++ flags
 	
 	# General
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wconversion -Wsign-conversion -Wlogical-op -Wdouble-promotion -std=c++14 -pedantic ") #-Wfatal-errors
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  -Wextra -Wconversion -Wsign-conversion -Wlogical-op -Wdouble-promotion -std=c++14 -pedantic -O3") #-Wfatal-errors
 	
 	# Release
 	if (CMAKE_BUILD_TYPE STREQUAL "")
@@ -30,7 +30,7 @@ cmake_minimum_required(VERSION 2.6)
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG -march=native -ffast-math")
 	
 	# Debug flags
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3 -g3")
 
 
 
