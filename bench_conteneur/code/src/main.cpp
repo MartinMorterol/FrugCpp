@@ -98,7 +98,8 @@ template <int max>
 			plot.run(i);
 		}
 
-		plot.generate_file("insertion_"+nom,"set logscale y","set key left top");
+		cout << plot.values << endl;
+		//plot.generate_file("insertion_"+nom,"set logscale y","set key left top");
 	}
 
 
@@ -106,7 +107,7 @@ int main()
 {
 
 
-	constexpr size_t max = 10000000;
+	constexpr size_t max = 1000;//0000;
 	run_vector_bench<max> ("lecture");
 	/*run_bench_insert<10000000>("lineaire",generate_lineaire);
 	run_bench_insert<10000000>("random",generate_random);*/

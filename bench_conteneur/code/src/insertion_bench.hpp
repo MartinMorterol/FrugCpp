@@ -77,7 +77,7 @@ namespace libRabbit {
 			plot.run(i,i,val);
 		}
 
-		plot.generate_file("insertion_"+nom,"set logscale y","set key left top");
+		//plot.generate_file("insertion_"+nom,"set logscale y","set key left top");
 	}
 }
 #endif // INSERTION_BENCH_HPP
